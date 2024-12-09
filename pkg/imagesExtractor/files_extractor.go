@@ -12,8 +12,8 @@ import (
 )
 
 type ImagesExtractorInterface interface {
-	ExtractFiles(scanPath string) ([]string, []string, string, error)
 	ExtractAndMergeImagesFromFiles(filesWithImages []string, imageModels []types.ImageModel, settingsFiles []string) ([]types.ImageModel, error)
+	ExtractFiles(scanPath string) (types.FileImages, map[string]map[string]string, string, error)
 	SaveObjectToFile(filePath string, obj interface{}) error
 }
 
