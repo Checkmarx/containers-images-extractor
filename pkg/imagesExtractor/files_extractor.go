@@ -11,17 +11,21 @@ import (
 	"strings"
 )
 
-type ImagesExtractorInterface interface {
+type ImagesExtractor interface {
 	ExtractAndMergeImagesFromFiles(files types.FileImages, images []types.ImageModel,
 		settingsFiles map[string]map[string]string) ([]types.ImageModel, error)
 	ExtractFiles(scanPath string) (types.FileImages, map[string]map[string]string, string, error)
 	SaveObjectToFile(folderPath string, obj interface{}) error
 }
 
-type ImagesExtractor struct {
+type imagesExtractor struct {
 }
 
-func (e ImagesExtractor) ExtractAndMergeImagesFromFiles(files types.FileImages, images []types.ImageModel,
+func NewImagesExtractor() ImagesExtractor {
+	return &imagesExtractor{}
+}
+
+func (ie *imagesExtractor) ExtractAndMergeImagesFromFiles(files types.FileImages, images []types.ImageModel,
 	settingsFiles map[string]map[string]string) ([]types.ImageModel, error) {
 	dockerfileImages, err := extractors.ExtractImagesFromDockerfiles(files.Dockerfile, settingsFiles)
 	if err != nil {
@@ -46,7 +50,7 @@ func (e ImagesExtractor) ExtractAndMergeImagesFromFiles(files types.FileImages, 
 	return imagesFromFiles, nil
 }
 
-func (e ImagesExtractor) ExtractFiles(scanPath string) (types.FileImages, map[string]map[string]string, string, error) {
+func (ie *imagesExtractor) ExtractFiles(scanPath string) (types.FileImages, map[string]map[string]string, string, error) {
 	filesPath, err := extractCompressedPath(scanPath)
 	if err != nil {
 		log.Err(err).Msgf("Could not extract compressed folder")
@@ -157,7 +161,7 @@ func parseEnvFile(filePath string) (map[string]string, error) {
 	return envVars, nil
 }
 
-func (e ImagesExtractor) SaveObjectToFile(folderPath string, obj interface{}) error {
+func (ie *imagesExtractor) SaveObjectToFile(folderPath string, obj interface{}) error {
 	containerResolutionFullPath, err := getContainerResolutionFullPath(folderPath)
 	if err != nil {
 		log.Err(err).Msgf("Error getting container resolution full file path")

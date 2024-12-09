@@ -9,7 +9,7 @@ import (
 )
 
 func TestExtractAndMergeImagesFromFiles(t *testing.T) {
-	extractor := &ImagesExtractor{}
+	extractor := NewImagesExtractor()
 
 	// Define test scenarios
 	scenarios := []struct {
@@ -194,7 +194,7 @@ func TestExtractAndMergeImagesFromFiles(t *testing.T) {
 }
 
 func TestExtractFiles(t *testing.T) {
-	extractor := &ImagesExtractor{}
+	extractor := NewImagesExtractor()
 
 	scenarios := []struct {
 		Name                 string
