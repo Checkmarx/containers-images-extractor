@@ -12,9 +12,10 @@ import (
 )
 
 type ImagesExtractorInterface interface {
-	ExtractAndMergeImagesFromFiles(filesWithImages []string, imageModels []types.ImageModel, settingsFiles []string) ([]types.ImageModel, error)
+	ExtractAndMergeImagesFromFiles(files types.FileImages, images []types.ImageModel,
+		settingsFiles map[string]map[string]string) ([]types.ImageModel, error)
 	ExtractFiles(scanPath string) (types.FileImages, map[string]map[string]string, string, error)
-	SaveObjectToFile(filePath string, obj interface{}) error
+	SaveObjectToFile(folderPath string, obj interface{}) error
 }
 
 type ImagesExtractor struct {
