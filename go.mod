@@ -3,7 +3,7 @@ module github.com/Checkmarx/containers-images-extractor
 go 1.23.3
 
 require (
-	github.com/Checkmarx/containers-types v1.0.0
+	github.com/Checkmarx/containers-types v1.0.1
 	github.com/rs/zerolog v1.33.0
 	gopkg.in/yaml.v3 v3.0.1
 	helm.sh/helm/v3 v3.16.3

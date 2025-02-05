@@ -104,11 +104,19 @@ func extractImagesFromDockerfile(filePath types.FilePath, envFiles map[string]ma
 				Name: fullImageName,
 				ImageLocations: []types.ImageLocation{
 					{
-						Origin: types.DockerFileOrigin,
-						Path:   filePath.RelativePath,
+						Origin:     types.DockerFileOrigin,
+						Path:       filePath.RelativePath,
+						FinalStage: false,
 					},
 				},
 			})
+		}
+	}
+
+	if len(imageNames) > 0 {
+		lastImage := imageNames[len(imageNames)-1]
+		if len(lastImage.ImageLocations) > 0 {
+			lastImage.ImageLocations[len(lastImage.ImageLocations)-1].FinalStage = true
 		}
 	}
 

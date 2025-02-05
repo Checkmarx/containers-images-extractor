@@ -42,8 +42,8 @@ func TestExtractAndMergeImagesFromFiles(t *testing.T) {
 			},
 			ExpectedImages: []types.ImageModel{
 				{Name: "debian:11", ImageLocations: []types.ImageLocation{{Origin: types.UserInput, Path: types.NoFilePath}}},
-				{Name: "mcr.microsoft.com/dotnet/sdk:6.0", ImageLocations: []types.ImageLocation{{Origin: types.DockerFileOrigin, Path: "Dockerfile"}}},
-				{Name: "mcr.microsoft.com/dotnet/aspnet:6.0", ImageLocations: []types.ImageLocation{{Origin: types.DockerFileOrigin, Path: "Dockerfile"}}},
+				{Name: "mcr.microsoft.com/dotnet/sdk:6.0", ImageLocations: []types.ImageLocation{{Origin: types.DockerFileOrigin, Path: "Dockerfile", FinalStage: false}}},
+				{Name: "mcr.microsoft.com/dotnet/aspnet:6.0", ImageLocations: []types.ImageLocation{{Origin: types.DockerFileOrigin, Path: "Dockerfile", FinalStage: true}}},
 				{Name: "buildimage:latest", ImageLocations: []types.ImageLocation{{Origin: types.DockerComposeFileOrigin, Path: "docker-compose1.yml"}}},
 				{Name: "checkmarx.jfrog.io/ast-docker/containers-worker:b201b1f", ImageLocations: []types.ImageLocation{{Origin: types.HelmFileOrigin, Path: "containers/templates/containers-worker.yaml"}}},
 				{Name: "checkmarx.jfrog.io/ast-docker/image-insights:f4b507b", ImageLocations: []types.ImageLocation{{Origin: types.HelmFileOrigin, Path: "containers/templates/image-insights.yaml"}}},
@@ -65,7 +65,7 @@ func TestExtractAndMergeImagesFromFiles(t *testing.T) {
 			ExpectedImages: []types.ImageModel{
 				{Name: "mcr.microsoft.com/dotnet/sdk:6.0", ImageLocations: []types.ImageLocation{{Origin: types.UserInput, Path: types.NoFilePath},
 					{Origin: types.DockerFileOrigin, Path: "Dockerfile"}, {Origin: types.DockerComposeFileOrigin, Path: "docker-compose-4.yml"}}},
-				{Name: "mcr.microsoft.com/dotnet/aspnet:6.0", ImageLocations: []types.ImageLocation{{Origin: types.DockerFileOrigin, Path: "Dockerfile"}}}},
+				{Name: "mcr.microsoft.com/dotnet/aspnet:6.0", ImageLocations: []types.ImageLocation{{Origin: types.DockerFileOrigin, Path: "Dockerfile", FinalStage: true}}}},
 		},
 		{
 			Name: "OnlyDockerfileFound",
@@ -78,8 +78,8 @@ func TestExtractAndMergeImagesFromFiles(t *testing.T) {
 				{Name: "debian:11", ImageLocations: []types.ImageLocation{{Origin: types.UserInput, Path: types.NoFilePath}}},
 			},
 			ExpectedImages: []types.ImageModel{
-				{Name: "mcr.microsoft.com/dotnet/sdk:6.0", ImageLocations: []types.ImageLocation{{Origin: types.DockerFileOrigin, Path: "Dockerfile"}}},
-				{Name: "mcr.microsoft.com/dotnet/aspnet:6.0", ImageLocations: []types.ImageLocation{{Origin: types.DockerFileOrigin, Path: "Dockerfile"}}},
+				{Name: "mcr.microsoft.com/dotnet/sdk:6.0", ImageLocations: []types.ImageLocation{{Origin: types.DockerFileOrigin, Path: "Dockerfile", FinalStage: false}}},
+				{Name: "mcr.microsoft.com/dotnet/aspnet:6.0", ImageLocations: []types.ImageLocation{{Origin: types.DockerFileOrigin, Path: "Dockerfile", FinalStage: true}}},
 				{Name: "debian:11", ImageLocations: []types.ImageLocation{{Origin: types.UserInput, Path: types.NoFilePath}}}},
 		},
 		{
@@ -136,8 +136,8 @@ func TestExtractAndMergeImagesFromFiles(t *testing.T) {
 				},
 			},
 			ExpectedImages: []types.ImageModel{
-				{Name: "mcr.microsoft.com/dotnet/sdk:6.0", ImageLocations: []types.ImageLocation{{Origin: types.DockerFileOrigin, Path: "Dockerfile"}}},
-				{Name: "mcr.microsoft.com/dotnet/aspnet:6.0", ImageLocations: []types.ImageLocation{{Origin: types.DockerFileOrigin, Path: "Dockerfile"}}},
+				{Name: "mcr.microsoft.com/dotnet/sdk:6.0", ImageLocations: []types.ImageLocation{{Origin: types.DockerFileOrigin, Path: "Dockerfile", FinalStage: false}}},
+				{Name: "mcr.microsoft.com/dotnet/aspnet:6.0", ImageLocations: []types.ImageLocation{{Origin: types.DockerFileOrigin, Path: "Dockerfile", FinalStage: true}}},
 				{Name: "buildimage:latest", ImageLocations: []types.ImageLocation{{Origin: types.DockerComposeFileOrigin, Path: "docker-compose1.yml"}}},
 				{Name: "checkmarx.jfrog.io/ast-docker/containers-worker:b201b1f", ImageLocations: []types.ImageLocation{{Origin: types.HelmFileOrigin, Path: "containers/templates/containers-worker.yaml"}}},
 				{Name: "checkmarx.jfrog.io/ast-docker/image-insights:f4b507b", ImageLocations: []types.ImageLocation{{Origin: types.HelmFileOrigin, Path: "containers/templates/image-insights.yaml"}}},

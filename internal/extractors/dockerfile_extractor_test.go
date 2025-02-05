@@ -60,13 +60,13 @@ func TestExtractImagesFromDockerfiles(t *testing.T) {
 	}
 
 	expectedImages := map[string]types.ImageLocation{
-		"mcr.microsoft.com/dotnet/sdk:6.0":    {Origin: types.DockerFileOrigin, Path: "Dockerfile"},
-		"mcr.microsoft.com/dotnet/aspnet:6.0": {Origin: types.DockerFileOrigin, Path: "Dockerfile"},
-		"nginx:latest":                        {Origin: types.DockerFileOrigin, Path: "Dockerfile-2"},
-		"mcr.microsoft.com/dotnet/aspnet:4.0": {Origin: types.DockerFileOrigin, Path: "Dockerfile-2"},
-		"tonistiigi/xx:1.2.1":                 {Origin: types.DockerFileOrigin, Path: "Dockerfile-3"},
-		"golang:1.20.8-alpine3.18":            {Origin: types.DockerFileOrigin, Path: "Dockerfile-3"},
-		"alpine:3.18":                         {Origin: types.DockerFileOrigin, Path: "Dockerfile-3"},
+		"mcr.microsoft.com/dotnet/sdk:6.0":    {Origin: types.DockerFileOrigin, Path: "Dockerfile", FinalStage: false},
+		"mcr.microsoft.com/dotnet/aspnet:6.0": {Origin: types.DockerFileOrigin, Path: "Dockerfile", FinalStage: true},
+		"nginx:latest":                        {Origin: types.DockerFileOrigin, Path: "Dockerfile-2", FinalStage: false},
+		"mcr.microsoft.com/dotnet/aspnet:4.0": {Origin: types.DockerFileOrigin, Path: "Dockerfile-2", FinalStage: true},
+		"tonistiigi/xx:1.2.1":                 {Origin: types.DockerFileOrigin, Path: "Dockerfile-3", FinalStage: false},
+		"golang:1.20.8-alpine3.18":            {Origin: types.DockerFileOrigin, Path: "Dockerfile-3", FinalStage: false},
+		"alpine:3.18":                         {Origin: types.DockerFileOrigin, Path: "Dockerfile-3", FinalStage: true},
 	}
 
 	checkResult(t, images, expectedImages)
@@ -117,8 +117,8 @@ func TestExtractImagesFromDockerfiles_OneValidOneInvalid(t *testing.T) {
 	}
 
 	expectedImages := map[string]types.ImageLocation{
-		"mcr.microsoft.com/dotnet/sdk:6.0":    {Origin: types.DockerFileOrigin, Path: "Dockerfile"},
-		"mcr.microsoft.com/dotnet/aspnet:6.0": {Origin: types.DockerFileOrigin, Path: "Dockerfile"},
+		"mcr.microsoft.com/dotnet/sdk:6.0":    {Origin: types.DockerFileOrigin, Path: "Dockerfile", FinalStage: false},
+		"mcr.microsoft.com/dotnet/aspnet:6.0": {Origin: types.DockerFileOrigin, Path: "Dockerfile", FinalStage: true},
 	}
 
 	checkResult(t, images, expectedImages)
@@ -142,7 +142,7 @@ func TestExtractImagesFromDockerfiles_WithEnvFiles(t *testing.T) {
 	}
 
 	expectedImages := map[string]types.ImageLocation{
-		"golang:1.20.8": {Origin: types.DockerFileOrigin, Path: "Dockerfile-5"},
+		"golang:1.20.8": {Origin: types.DockerFileOrigin, Path: "Dockerfile-5", FinalStage: true},
 	}
 
 	checkResult(t, images, expectedImages)
@@ -168,7 +168,7 @@ func TestExtractImagesFromDockerfiles_WithMultipleEnvFiles(t *testing.T) {
 	}
 
 	expectedImages := map[string]types.ImageLocation{
-		"alpine:3.18": {Origin: types.DockerFileOrigin, Path: "Dockerfile-5"},
+		"alpine:3.18": {Origin: types.DockerFileOrigin, Path: "Dockerfile-5", FinalStage: true},
 	}
 
 	checkResult(t, images, expectedImages)
@@ -197,6 +197,10 @@ func checkResult(t *testing.T, images []types.ImageModel, expectedImages map[str
 
 		if image.ImageLocations[0].Origin != expectedLocation.Origin {
 			t.Errorf("Expected image %s to have origin %s, but got %s", image.Name, expectedLocation.Origin, image.ImageLocations[0].Origin)
+		}
+
+		if image.ImageLocations[0].FinalStage != expectedLocation.FinalStage {
+			t.Errorf("Expected image %s to have FinalStage %v, but got %v", image.Name, expectedLocation.FinalStage, image.ImageLocations[0].FinalStage)
 		}
 	}
 }
