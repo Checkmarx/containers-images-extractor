@@ -1,6 +1,6 @@
 module github.com/Checkmarx/containers-images-extractor
 
-go 1.23.3
+go 1.24.1
 
 require (
 	github.com/Checkmarx/containers-types v1.0.2
