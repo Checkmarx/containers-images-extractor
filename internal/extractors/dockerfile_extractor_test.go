@@ -1,8 +1,9 @@
 package extractors
 
 import (
-	"github.com/Checkmarx/containers-types/types"
 	"testing"
+
+	"github.com/Checkmarx/containers-types/types"
 )
 
 func TestGetDirsForHierarchy(t *testing.T) {
@@ -42,6 +43,7 @@ func TestExtractImagesFromDockerfiles(t *testing.T) {
 		{FullPath: "../../test_files/imageExtraction/dockerfiles/Dockerfile", RelativePath: "Dockerfile"},
 		{FullPath: "../../test_files/imageExtraction/dockerfiles/Dockerfile-2", RelativePath: "Dockerfile-2"},
 		{FullPath: "../../test_files/imageExtraction/dockerfiles/Dockerfile-3", RelativePath: "Dockerfile-3"},
+		{FullPath: "../../test_files/imageExtraction/dockerfiles/Dockerfile.ubi9", RelativePath: "Dockerfile.ubi9"},
 	}
 
 	envVars := map[string]map[string]string{
@@ -67,6 +69,7 @@ func TestExtractImagesFromDockerfiles(t *testing.T) {
 		"tonistiigi/xx:1.2.1":                 {Origin: types.DockerFileOrigin, Path: "Dockerfile-3", FinalStage: false},
 		"golang:1.20.8-alpine3.18":            {Origin: types.DockerFileOrigin, Path: "Dockerfile-3", FinalStage: false},
 		"alpine:3.18":                         {Origin: types.DockerFileOrigin, Path: "Dockerfile-3", FinalStage: true},
+		"test:ubi9":                           {Origin: types.DockerFileOrigin, Path: "Dockerfile.ubi9", FinalStage: true},
 	}
 
 	checkResult(t, images, expectedImages)
