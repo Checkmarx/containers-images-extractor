@@ -11,7 +11,6 @@ import (
 
 func TestExtractAndMergeImagesFromFiles(t *testing.T) {
 	extractor := NewImagesExtractor()
-
 	// Define test scenarios
 	scenarios := []struct {
 		Name             string
