@@ -2,16 +2,17 @@ package imagesExtractor
 
 import (
 	"fmt"
-	"github.com/Checkmarx/containers-types/types"
-	"github.com/rs/zerolog/log"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/Checkmarx/containers-types/types"
+	"github.com/rs/zerolog/log"
 )
 
 var (
-	dockerfilePattern    = regexp.MustCompile(`^Dockerfile(-[a-zA-Z0-9]+)?$`)
+	dockerfilePattern    = regexp.MustCompile(`^Dockerfile(?:-[a-zA-Z0-9]+|\.[a-zA-Z0-9.]+|[a-zA-Z0-9.]+)?$`)
 	dockerComposePattern = regexp.MustCompile(`docker-compose(-[a-zA-Z0-9]+)?(\.yml|\.yaml)$`)
 )
 

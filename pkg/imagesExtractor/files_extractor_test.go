@@ -1,16 +1,16 @@
 package imagesExtractor
 
 import (
-	"github.com/Checkmarx/containers-types/types"
 	"reflect"
 	"sort"
 	"strings"
 	"testing"
+
+	"github.com/Checkmarx/containers-types/types"
 )
 
 func TestExtractAndMergeImagesFromFiles(t *testing.T) {
 	extractor := NewImagesExtractor()
-
 	// Define test scenarios
 	scenarios := []struct {
 		Name             string
@@ -213,6 +213,7 @@ func TestExtractFiles(t *testing.T) {
 					{FullPath: "../../test_files/imageExtraction/dockerfiles/Dockerfile-3", RelativePath: "dockerfiles/Dockerfile-3"},
 					{FullPath: "../../test_files/imageExtraction/dockerfiles/Dockerfile-4", RelativePath: "dockerfiles/Dockerfile-4"},
 					{FullPath: "../../test_files/imageExtraction/dockerfiles/Dockerfile-5", RelativePath: "dockerfiles/Dockerfile-5"},
+					{FullPath: "../../test_files/imageExtraction/dockerfiles/Dockerfile.ubi9", RelativePath: "dockerfiles/Dockerfile.ubi9"},
 				},
 				DockerCompose: []types.FilePath{
 					{FullPath: "../../test_files/imageExtraction/dockerCompose/docker-compose.yaml", RelativePath: "dockerCompose/docker-compose.yaml"},
