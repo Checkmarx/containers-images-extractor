@@ -128,11 +128,13 @@ func getContainerResolutionFullPath(folderPath string) (string, error) {
 }
 
 func printFilePaths(f []types.FilePath, message string) {
-	log.Debug().Msgf("%s. files: %v\n", message, strings.Join(func() []string {
-		var result []string
-		for _, obj := range f {
-			result = append(result, obj.RelativePath)
-		}
-		return result
-	}(), ", "))
+	if len(f) > 0 {
+		log.Debug().Msgf("%s. files: %v\n", message, strings.Join(func() []string {
+			var result []string
+			for _, obj := range f {
+				result = append(result, obj.RelativePath)
+			}
+			return result
+		}(), ", "))
+	}
 }
