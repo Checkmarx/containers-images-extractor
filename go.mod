@@ -1,9 +1,9 @@
 module github.com/Checkmarx/containers-images-extractor
 
-go 1.24.1
+go 1.23.6
 
 require (
-	github.com/Checkmarx/containers-types v1.0.3
+	github.com/Checkmarx/containers-types v1.0.4
 	github.com/rs/zerolog v1.34.0
 	gopkg.in/yaml.v3 v3.0.1
 	helm.sh/helm/v3 v3.17.3
