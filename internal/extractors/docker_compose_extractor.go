@@ -3,11 +3,14 @@ package extractors
 import (
 	"bufio"
 	"fmt"
+	"os"
+	"regexp"
+
+	"strings"
+
 	"github.com/Checkmarx/containers-types/types"
 	"github.com/rs/zerolog/log"
 	"gopkg.in/yaml.v3"
-	"os"
-	"regexp"
 )
 
 // Service represents a service in docker-compose
@@ -127,4 +130,99 @@ func processEnvVars(extractedImageId string, envVars map[string]string) string {
 	}
 
 	return extractedImageId
+}
+
+// calculateYAMLIndices calculates the start and end index of a value in a specific line of a YAML file
+func calculateYAMLIndices(filePath string, lineNum int, value string) (startIdx, endIdx int) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		log.Debug().Msgf("Could not open file %s for index calculation: %v", filePath, err)
+		return 0, 0 // fallback
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	currentLine := 1
+
+	for scanner.Scan() {
+		if currentLine == lineNum {
+			lineText := scanner.Text()
+			startIdx = strings.Index(lineText, value)
+			if startIdx != -1 {
+				endIdx = startIdx + len(value)
+				return startIdx, endIdx
+			}
+			break
+		}
+		currentLine++
+	}
+
+	if err := scanner.Err(); err != nil {
+		log.Debug().Msgf("Error scanning file %s for index calculation: %v", filePath, err)
+	}
+
+	return 0, 0 // fallback if not found
+}
+
+// ExtractImagesWithLineNumbersFromDockerComposeFile extracts images and their line numbers using yaml.Node.
+func ExtractImagesWithLineNumbersFromDockerComposeFile(filePath types.FilePath) ([]types.ImageModel, error) {
+	var imageNames []types.ImageModel
+
+	file, err := os.Open(filePath.FullPath)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	decoder := yaml.NewDecoder(file)
+	var root yaml.Node
+	if err := decoder.Decode(&root); err != nil {
+		return nil, err
+	}
+
+	// Find the "services" mapping node
+	for i := 0; i < len(root.Content); i++ {
+		node := root.Content[i]
+		if node.Kind == yaml.MappingNode {
+			for j := 0; j < len(node.Content); j += 2 {
+				key := node.Content[j]
+				value := node.Content[j+1]
+				if key.Value == "services" && value.Kind == yaml.MappingNode {
+					// Iterate over services
+					for k := 0; k < len(value.Content); k += 2 {
+						serviceName := value.Content[k].Value
+						serviceNode := value.Content[k+1]
+						// Find "image" field in this service
+						for l := 0; l < len(serviceNode.Content); l += 2 {
+							fieldKey := serviceNode.Content[l]
+							fieldValue := serviceNode.Content[l+1]
+							if fieldKey.Value == "image" {
+								log.Debug().Msgf("Found image %s for service %s at line %d", fieldValue.Value, serviceName, fieldValue.Line)
+
+								// Calculate start and end indices
+								startIdx, endIdx := calculateYAMLIndices(filePath.FullPath, fieldValue.Line, fieldValue.Value)
+								if startIdx == 0 && endIdx == 0 {
+									log.Debug().Msgf("Could not calculate indices for image %s at line %d, using fallback", fieldValue.Value, fieldValue.Line)
+								}
+
+								imageNames = append(imageNames, types.ImageModel{
+									Name: fieldValue.Value,
+									ImageLocations: []types.ImageLocation{
+										{
+											Origin:     types.DockerComposeFileOrigin,
+											Path:       filePath.RelativePath,
+											Line:       fieldValue.Line,
+											StartIndex: startIdx,
+											EndIndex:   endIdx,
+										},
+									},
+								})
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	return imageNames, nil
 }

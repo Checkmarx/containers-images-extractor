@@ -3,12 +3,13 @@ package extractors
 import (
 	"bufio"
 	"fmt"
-	"github.com/Checkmarx/containers-types/types"
-	"github.com/rs/zerolog/log"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/Checkmarx/containers-types/types"
+	"github.com/rs/zerolog/log"
 )
 
 func ExtractImagesFromDockerfiles(filePaths []types.FilePath, envFiles map[string]map[string]string) ([]types.ImageModel, error) {
@@ -46,7 +47,9 @@ func extractImagesFromDockerfile(filePath types.FilePath, envFiles map[string]ma
 	}(file)
 
 	scanner := bufio.NewScanner(file)
+	lineNum := 0
 	for scanner.Scan() {
+		lineNum++
 		line := scanner.Text()
 
 		// Parse ARG and ENV lines within the Dockerfile
@@ -100,6 +103,19 @@ func extractImagesFromDockerfile(filePath types.FilePath, envFiles map[string]ma
 					continue
 				}
 			}
+			log.Debug().Msgf("Found image %s at line %d (will assign to ImageLocation.Line/StartIndex/EndIndex)", fullImageName, lineNum)
+
+			// Robust regex to find the start and end index of the image name in the line
+			re := regexp.MustCompile(`FROM\s+([^\s]+)`)
+			indices := re.FindStringSubmatchIndex(line)
+			imgIdx, imgEnd := -1, -1
+			if len(indices) >= 4 {
+				imgIdx = indices[2]
+				imgEnd = indices[3]
+				fmt.Printf("DEBUG: imgIdx=%d, imgEnd=%d, matched='%s'\n", imgIdx, imgEnd, line[imgIdx:imgEnd])
+				// Removed the code that extends imgEnd by the tag length
+			}
+
 			imageNames = append(imageNames, types.ImageModel{
 				Name: fullImageName,
 				ImageLocations: []types.ImageLocation{
@@ -107,6 +123,9 @@ func extractImagesFromDockerfile(filePath types.FilePath, envFiles map[string]ma
 						Origin:     types.DockerFileOrigin,
 						Path:       filePath.RelativePath,
 						FinalStage: false,
+						Line:       lineNum,
+						StartIndex: imgIdx,
+						EndIndex:   imgEnd,
 					},
 				},
 			})
