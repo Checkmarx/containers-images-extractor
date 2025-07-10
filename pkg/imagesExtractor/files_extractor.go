@@ -3,12 +3,13 @@ package imagesExtractor
 import (
 	"bufio"
 	"encoding/json"
-	"github.com/Checkmarx/containers-images-extractor/internal/extractors"
-	"github.com/Checkmarx/containers-types/types"
-	"github.com/rs/zerolog/log"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/Checkmarx/containers-images-extractor/internal/extractors"
+	"github.com/Checkmarx/containers-types/types"
+	"github.com/rs/zerolog/log"
 )
 
 type ImagesExtractor interface {
@@ -16,6 +17,7 @@ type ImagesExtractor interface {
 		settingsFiles map[string]map[string]string) ([]types.ImageModel, error)
 	ExtractFiles(scanPath string) (types.FileImages, map[string]map[string]string, string, error)
 	SaveObjectToFile(folderPath string, obj interface{}) error
+	ExtractAndMergeImagesFromFilesWithLineInfo(files types.FileImages, images []types.ImageModel, settingsFiles map[string]map[string]string) ([]types.ImageModel, error)
 }
 
 type imagesExtractor struct {
@@ -105,6 +107,32 @@ func (ie *imagesExtractor) ExtractFiles(scanPath string) (types.FileImages, map[
 
 	envVars := parseEnvFiles(envFiles)
 	return f, envVars, filesPath, nil
+}
+
+func (ie *imagesExtractor) ExtractAndMergeImagesFromFilesWithLineInfo(files types.FileImages, images []types.ImageModel, settingsFiles map[string]map[string]string) ([]types.ImageModel, error) {
+	dockerfileImages, err := extractors.ExtractImagesFromDockerfiles(files.Dockerfile, settingsFiles)
+	if err != nil {
+		log.Err(err).Msg("Could not extract images from docker files")
+		return nil, err
+	}
+	dockerComposeFileImages := []types.ImageModel{}
+	for _, filePath := range files.DockerCompose {
+		composeImages, err := extractors.ExtractImagesWithLineNumbersFromDockerComposeFile(filePath)
+		if err != nil {
+			log.Err(err).Msgf("Could not extract images with line info from docker compose file: %s", filePath.FullPath)
+			continue
+		}
+		dockerComposeFileImages = append(dockerComposeFileImages, composeImages...)
+	}
+
+	helmImages, extErr := extractors.ExtractImagesFromHelmFiles(files.Helm)
+	if extErr != nil {
+		log.Err(extErr).Msg("Could not extract images from helm files")
+		return nil, extErr
+	}
+
+	imagesFromFiles := mergeImages(images, dockerfileImages, dockerComposeFileImages, helmImages)
+	return imagesFromFiles, nil
 }
 
 func parseEnvFiles(envFiles map[string][]string) map[string]map[string]string {

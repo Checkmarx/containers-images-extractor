@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/Checkmarx/containers-images-extractor/internal/extractors"
 	"github.com/Checkmarx/containers-types/types"
 )
 
@@ -41,12 +42,12 @@ func TestExtractAndMergeImagesFromFiles(t *testing.T) {
 				{Name: "debian:11", ImageLocations: []types.ImageLocation{{Origin: types.UserInput, Path: types.NoFilePath}}},
 			},
 			ExpectedImages: []types.ImageModel{
-				{Name: "debian:11", ImageLocations: []types.ImageLocation{{Origin: types.UserInput, Path: types.NoFilePath}}},
-				{Name: "mcr.microsoft.com/dotnet/sdk:6.0", ImageLocations: []types.ImageLocation{{Origin: types.DockerFileOrigin, Path: "Dockerfile", FinalStage: false}}},
-				{Name: "mcr.microsoft.com/dotnet/aspnet:6.0", ImageLocations: []types.ImageLocation{{Origin: types.DockerFileOrigin, Path: "Dockerfile", FinalStage: true}}},
-				{Name: "buildimage:latest", ImageLocations: []types.ImageLocation{{Origin: types.DockerComposeFileOrigin, Path: "docker-compose1.yml"}}},
-				{Name: "checkmarx.jfrog.io/ast-docker/containers-worker:b201b1f", ImageLocations: []types.ImageLocation{{Origin: types.HelmFileOrigin, Path: "containers/templates/containers-worker.yaml"}}},
-				{Name: "checkmarx.jfrog.io/ast-docker/image-insights:f4b507b", ImageLocations: []types.ImageLocation{{Origin: types.HelmFileOrigin, Path: "containers/templates/image-insights.yaml"}}},
+				{Name: "debian:11", ImageLocations: []types.ImageLocation{{Origin: types.UserInput, Path: types.NoFilePath, Line: 0, StartIndex: 0, EndIndex: 0}}},
+				{Name: "mcr.microsoft.com/dotnet/sdk:6.0", ImageLocations: []types.ImageLocation{{Origin: types.DockerFileOrigin, Path: "Dockerfile", FinalStage: false, Line: 1, StartIndex: 5, EndIndex: 37}}},
+				{Name: "mcr.microsoft.com/dotnet/aspnet:6.0", ImageLocations: []types.ImageLocation{{Origin: types.DockerFileOrigin, Path: "Dockerfile", FinalStage: true, Line: 25, StartIndex: 5, EndIndex: 40}}},
+				{Name: "buildimage:latest", ImageLocations: []types.ImageLocation{{Origin: types.DockerComposeFileOrigin, Path: "docker-compose1.yml", Line: 0, StartIndex: 0, EndIndex: 0}}},
+				{Name: "checkmarx.jfrog.io/ast-docker/containers-worker:b201b1f", ImageLocations: []types.ImageLocation{{Origin: types.HelmFileOrigin, Path: "containers/templates/containers-worker.yaml", Line: 0, StartIndex: 0, EndIndex: 0}}},
+				{Name: "checkmarx.jfrog.io/ast-docker/image-insights:f4b507b", ImageLocations: []types.ImageLocation{{Origin: types.HelmFileOrigin, Path: "containers/templates/image-insights.yaml", Line: 0, StartIndex: 0, EndIndex: 0}}},
 			},
 		},
 		{
@@ -60,12 +61,16 @@ func TestExtractAndMergeImagesFromFiles(t *testing.T) {
 				},
 			},
 			UserInput: []types.ImageModel{
-				{Name: "mcr.microsoft.com/dotnet/sdk:6.0", ImageLocations: []types.ImageLocation{{Origin: types.UserInput, Path: types.NoFilePath}}},
+				{Name: "mcr.microsoft.com/dotnet/sdk:6.0", ImageLocations: []types.ImageLocation{{Origin: types.UserInput, Path: types.NoFilePath, Line: 1, StartIndex: 5, EndIndex: 37}}},
 			},
 			ExpectedImages: []types.ImageModel{
-				{Name: "mcr.microsoft.com/dotnet/sdk:6.0", ImageLocations: []types.ImageLocation{{Origin: types.UserInput, Path: types.NoFilePath},
-					{Origin: types.DockerFileOrigin, Path: "Dockerfile"}, {Origin: types.DockerComposeFileOrigin, Path: "docker-compose-4.yml"}}},
-				{Name: "mcr.microsoft.com/dotnet/aspnet:6.0", ImageLocations: []types.ImageLocation{{Origin: types.DockerFileOrigin, Path: "Dockerfile", FinalStage: true}}}},
+				{Name: "mcr.microsoft.com/dotnet/sdk:6.0", ImageLocations: []types.ImageLocation{
+					{Origin: types.UserInput, Path: types.NoFilePath, Line: 1, StartIndex: 5, EndIndex: 37},
+					{Origin: types.DockerFileOrigin, Path: "Dockerfile", Line: 1, StartIndex: 5, EndIndex: 37},
+					{Origin: types.DockerComposeFileOrigin, Path: "docker-compose-4.yml", Line: 0, StartIndex: 0, EndIndex: 0},
+				}},
+				{Name: "mcr.microsoft.com/dotnet/aspnet:6.0", ImageLocations: []types.ImageLocation{{Origin: types.DockerFileOrigin, Path: "Dockerfile", FinalStage: true, Line: 25, StartIndex: 5, EndIndex: 40}}},
+			},
 		},
 		{
 			Name: "OnlyDockerfileFound",
@@ -78,9 +83,9 @@ func TestExtractAndMergeImagesFromFiles(t *testing.T) {
 				{Name: "debian:11", ImageLocations: []types.ImageLocation{{Origin: types.UserInput, Path: types.NoFilePath}}},
 			},
 			ExpectedImages: []types.ImageModel{
-				{Name: "mcr.microsoft.com/dotnet/sdk:6.0", ImageLocations: []types.ImageLocation{{Origin: types.DockerFileOrigin, Path: "Dockerfile", FinalStage: false}}},
-				{Name: "mcr.microsoft.com/dotnet/aspnet:6.0", ImageLocations: []types.ImageLocation{{Origin: types.DockerFileOrigin, Path: "Dockerfile", FinalStage: true}}},
-				{Name: "debian:11", ImageLocations: []types.ImageLocation{{Origin: types.UserInput, Path: types.NoFilePath}}}},
+				{Name: "mcr.microsoft.com/dotnet/sdk:6.0", ImageLocations: []types.ImageLocation{{Origin: types.DockerFileOrigin, Path: "Dockerfile", FinalStage: false, Line: 1, StartIndex: 5, EndIndex: 37}}},
+				{Name: "mcr.microsoft.com/dotnet/aspnet:6.0", ImageLocations: []types.ImageLocation{{Origin: types.DockerFileOrigin, Path: "Dockerfile", FinalStage: true, Line: 25, StartIndex: 5, EndIndex: 40}}},
+				{Name: "debian:11", ImageLocations: []types.ImageLocation{{Origin: types.UserInput, Path: types.NoFilePath, Line: 0, StartIndex: 0, EndIndex: 0}}}},
 		},
 		{
 			Name: "OnlyDockerComposeFound",
@@ -93,8 +98,9 @@ func TestExtractAndMergeImagesFromFiles(t *testing.T) {
 				{Name: "debian:11", ImageLocations: []types.ImageLocation{{Origin: types.UserInput, Path: types.NoFilePath}}},
 			},
 			ExpectedImages: []types.ImageModel{
-				{Name: "mcr.microsoft.com/dotnet/sdk:6.0", ImageLocations: []types.ImageLocation{{Origin: types.DockerComposeFileOrigin, Path: "docker-compose-4.yml"}}},
-				{Name: "debian:11", ImageLocations: []types.ImageLocation{{Origin: types.UserInput, Path: types.NoFilePath}}}},
+				{Name: "mcr.microsoft.com/dotnet/sdk:6.0", ImageLocations: []types.ImageLocation{{Origin: types.DockerComposeFileOrigin, Path: "docker-compose-4.yml", Line: 0, StartIndex: 0, EndIndex: 0}}},
+				{Name: "debian:11", ImageLocations: []types.ImageLocation{{Origin: types.UserInput, Path: types.NoFilePath, Line: 0, StartIndex: 0, EndIndex: 0}}},
+			},
 		},
 		{
 			Name: "OnlyHelmChartFound",
@@ -112,9 +118,9 @@ func TestExtractAndMergeImagesFromFiles(t *testing.T) {
 				{Name: "debian:11", ImageLocations: []types.ImageLocation{{Origin: types.UserInput, Path: types.NoFilePath}}},
 			},
 			ExpectedImages: []types.ImageModel{
-				{Name: "debian:11", ImageLocations: []types.ImageLocation{{Origin: types.UserInput, Path: types.NoFilePath}}},
-				{Name: "checkmarx.jfrog.io/ast-docker/containers-worker:b201b1f", ImageLocations: []types.ImageLocation{{Origin: types.HelmFileOrigin, Path: "containers/templates/containers-worker.yaml"}}},
-				{Name: "checkmarx.jfrog.io/ast-docker/image-insights:f4b507b", ImageLocations: []types.ImageLocation{{Origin: types.HelmFileOrigin, Path: "containers/templates/image-insights.yaml"}}},
+				{Name: "debian:11", ImageLocations: []types.ImageLocation{{Origin: types.UserInput, Path: types.NoFilePath, Line: 0, StartIndex: 0, EndIndex: 0}}},
+				{Name: "checkmarx.jfrog.io/ast-docker/containers-worker:b201b1f", ImageLocations: []types.ImageLocation{{Origin: types.HelmFileOrigin, Path: "containers/templates/containers-worker.yaml", Line: 0, StartIndex: 0, EndIndex: 0}}},
+				{Name: "checkmarx.jfrog.io/ast-docker/image-insights:f4b507b", ImageLocations: []types.ImageLocation{{Origin: types.HelmFileOrigin, Path: "containers/templates/image-insights.yaml", Line: 0, StartIndex: 0, EndIndex: 0}}},
 			},
 		},
 		{
@@ -136,11 +142,11 @@ func TestExtractAndMergeImagesFromFiles(t *testing.T) {
 				},
 			},
 			ExpectedImages: []types.ImageModel{
-				{Name: "mcr.microsoft.com/dotnet/sdk:6.0", ImageLocations: []types.ImageLocation{{Origin: types.DockerFileOrigin, Path: "Dockerfile", FinalStage: false}}},
-				{Name: "mcr.microsoft.com/dotnet/aspnet:6.0", ImageLocations: []types.ImageLocation{{Origin: types.DockerFileOrigin, Path: "Dockerfile", FinalStage: true}}},
-				{Name: "buildimage:latest", ImageLocations: []types.ImageLocation{{Origin: types.DockerComposeFileOrigin, Path: "docker-compose1.yml"}}},
-				{Name: "checkmarx.jfrog.io/ast-docker/containers-worker:b201b1f", ImageLocations: []types.ImageLocation{{Origin: types.HelmFileOrigin, Path: "containers/templates/containers-worker.yaml"}}},
-				{Name: "checkmarx.jfrog.io/ast-docker/image-insights:f4b507b", ImageLocations: []types.ImageLocation{{Origin: types.HelmFileOrigin, Path: "containers/templates/image-insights.yaml"}}},
+				{Name: "mcr.microsoft.com/dotnet/sdk:6.0", ImageLocations: []types.ImageLocation{{Origin: types.DockerFileOrigin, Path: "Dockerfile", FinalStage: false, Line: 1, StartIndex: 5, EndIndex: 37}}},
+				{Name: "mcr.microsoft.com/dotnet/aspnet:6.0", ImageLocations: []types.ImageLocation{{Origin: types.DockerFileOrigin, Path: "Dockerfile", FinalStage: true, Line: 25, StartIndex: 5, EndIndex: 40}}},
+				{Name: "buildimage:latest", ImageLocations: []types.ImageLocation{{Origin: types.DockerComposeFileOrigin, Path: "docker-compose1.yml", Line: 0, StartIndex: 0, EndIndex: 0}}},
+				{Name: "checkmarx.jfrog.io/ast-docker/containers-worker:b201b1f", ImageLocations: []types.ImageLocation{{Origin: types.HelmFileOrigin, Path: "containers/templates/containers-worker.yaml", Line: 0, StartIndex: 0, EndIndex: 0}}},
+				{Name: "checkmarx.jfrog.io/ast-docker/image-insights:f4b507b", ImageLocations: []types.ImageLocation{{Origin: types.HelmFileOrigin, Path: "containers/templates/image-insights.yaml", Line: 0, StartIndex: 0, EndIndex: 0}}},
 			},
 		},
 	}
@@ -408,4 +414,62 @@ func CompareSettingsFiles(a, b map[string]map[string]string) bool {
 		}
 	}
 	return true
+}
+
+// TestDockerComposeExtractorWithLineNumbersAndIndices tests the new Docker Compose extractor that provides accurate line numbers and character indices
+func TestDockerComposeExtractorWithLineNumbersAndIndices(t *testing.T) {
+	// Test the new extractor that uses yaml.Node and provides line numbers
+	filePath := types.FilePath{
+		FullPath:     "../../test_files/imageExtraction/dockerCompose/docker-compose-4.yaml",
+		RelativePath: "docker-compose-4.yml",
+	}
+
+	result, err := extractors.ExtractImagesWithLineNumbersFromDockerComposeFile(filePath)
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+
+	// Check that we got the expected image
+	if len(result) != 1 {
+		t.Errorf("Expected 1 image, got %d", len(result))
+	}
+
+	img := result[0]
+	if img.Name != "mcr.microsoft.com/dotnet/sdk:6.0" {
+		t.Errorf("Expected image name 'mcr.microsoft.com/dotnet/sdk:6.0', got '%s'", img.Name)
+	}
+
+	if len(img.ImageLocations) != 1 {
+		t.Errorf("Expected 1 location, got %d", len(img.ImageLocations))
+	}
+
+	loc := img.ImageLocations[0]
+
+	// Test all properties of the new extractor
+	if loc.Origin != types.DockerComposeFileOrigin {
+		t.Errorf("Expected origin %v, got %v", types.DockerComposeFileOrigin, loc.Origin)
+	}
+	if loc.Path != "docker-compose-4.yml" {
+		t.Errorf("Expected path 'docker-compose-4.yml', got '%s'", loc.Path)
+	}
+	if loc.Line < 0 {
+		t.Errorf("Expected 0-based line number >= 0, got %d", loc.Line)
+	}
+
+	expectedLine := 4 // Line 5 in file = line 4 in 0-based indexing
+	if loc.Line != expectedLine {
+		t.Errorf("Expected line number %d, got %d", expectedLine, loc.Line)
+	}
+
+	expectedStartIndex := 11
+	expectedEndIndex := 43 // End index is exclusive, so it's the position after the last character
+
+	if loc.StartIndex != expectedStartIndex {
+		t.Errorf("Expected start index %d, got %d", expectedStartIndex, loc.StartIndex)
+	}
+	if loc.EndIndex != expectedEndIndex {
+		t.Errorf("Expected end index %d, got %d", expectedEndIndex, loc.EndIndex)
+	}
+
+	t.Logf("Image '%s' found at line %d, indices [%d:%d]", img.Name, loc.Line, loc.StartIndex, loc.EndIndex)
 }
