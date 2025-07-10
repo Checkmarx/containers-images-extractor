@@ -47,10 +47,10 @@ func extractImagesFromDockerfile(filePath types.FilePath, envFiles map[string]ma
 	}(file)
 
 	scanner := bufio.NewScanner(file)
-	lineNum := 0
+	lineNum := -1 // Start from -1 so first line becomes 0 (0-based indexing)
 	for scanner.Scan() {
-		lineNum++
 		line := scanner.Text()
+		lineNum++ // Increment at the beginning to ensure it's always updated
 
 		// Parse ARG and ENV lines within the Dockerfile
 		if match := regexp.MustCompile(`^\s*(ARG|ENV)\s+(\w+)=([^\s]+)`).FindStringSubmatch(line); match != nil {
