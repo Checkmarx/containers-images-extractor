@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/Checkmarx/containers-images-extractor/internal/extractors"
 	"github.com/Checkmarx/containers-types/types"
 )
 
@@ -413,4 +414,62 @@ func CompareSettingsFiles(a, b map[string]map[string]string) bool {
 		}
 	}
 	return true
+}
+
+// TestDockerComposeExtractorWithLineNumbersAndIndices tests the new Docker Compose extractor that provides accurate line numbers and character indices
+func TestDockerComposeExtractorWithLineNumbersAndIndices(t *testing.T) {
+	// Test the new extractor that uses yaml.Node and provides line numbers
+	filePath := types.FilePath{
+		FullPath:     "../../test_files/imageExtraction/dockerCompose/docker-compose-4.yaml",
+		RelativePath: "docker-compose-4.yml",
+	}
+
+	result, err := extractors.ExtractImagesWithLineNumbersFromDockerComposeFile(filePath)
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+
+	// Check that we got the expected image
+	if len(result) != 1 {
+		t.Errorf("Expected 1 image, got %d", len(result))
+	}
+
+	img := result[0]
+	if img.Name != "mcr.microsoft.com/dotnet/sdk:6.0" {
+		t.Errorf("Expected image name 'mcr.microsoft.com/dotnet/sdk:6.0', got '%s'", img.Name)
+	}
+
+	if len(img.ImageLocations) != 1 {
+		t.Errorf("Expected 1 location, got %d", len(img.ImageLocations))
+	}
+
+	loc := img.ImageLocations[0]
+
+	// Test all properties of the new extractor
+	if loc.Origin != types.DockerComposeFileOrigin {
+		t.Errorf("Expected origin %v, got %v", types.DockerComposeFileOrigin, loc.Origin)
+	}
+	if loc.Path != "docker-compose-4.yml" {
+		t.Errorf("Expected path 'docker-compose-4.yml', got '%s'", loc.Path)
+	}
+	if loc.Line < 0 {
+		t.Errorf("Expected 0-based line number >= 0, got %d", loc.Line)
+	}
+
+	expectedLine := 4 // Line 5 in file = line 4 in 0-based indexing
+	if loc.Line != expectedLine {
+		t.Errorf("Expected line number %d, got %d", expectedLine, loc.Line)
+	}
+
+	expectedStartIndex := 11
+	expectedEndIndex := 43 // End index is exclusive, so it's the position after the last character
+
+	if loc.StartIndex != expectedStartIndex {
+		t.Errorf("Expected start index %d, got %d", expectedStartIndex, loc.StartIndex)
+	}
+	if loc.EndIndex != expectedEndIndex {
+		t.Errorf("Expected end index %d, got %d", expectedEndIndex, loc.EndIndex)
+	}
+
+	t.Logf("Image '%s' found at line %d, indices [%d:%d]", img.Name, loc.Line, loc.StartIndex, loc.EndIndex)
 }
