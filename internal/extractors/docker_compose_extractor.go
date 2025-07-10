@@ -213,13 +213,22 @@ func findServicesNode(root *yaml.Node) *yaml.Node {
 	for i := 0; i < len(root.Content); i++ {
 		node := root.Content[i]
 		if node.Kind == yaml.MappingNode {
-			for j := 0; j < len(node.Content); j += 2 {
-				key := node.Content[j]
-				value := node.Content[j+1]
-				if key.Value == "services" && value.Kind == yaml.MappingNode {
-					return value
-				}
+			servicesNode := findServicesInMapping(node)
+			if servicesNode != nil {
+				return servicesNode
 			}
+		}
+	}
+	return nil
+}
+
+// findServicesInMapping searches for the "services" key in a mapping node
+func findServicesInMapping(mappingNode *yaml.Node) *yaml.Node {
+	for j := 0; j < len(mappingNode.Content); j += 2 {
+		key := mappingNode.Content[j]
+		value := mappingNode.Content[j+1]
+		if key.Value == "services" && value.Kind == yaml.MappingNode {
+			return value
 		}
 	}
 	return nil
