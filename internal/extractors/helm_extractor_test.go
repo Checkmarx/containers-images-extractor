@@ -278,15 +278,15 @@ type ExpectedLocation struct {
 func TestExtractImagesWithLineNumbersFromHelmFiles_Comprehensive(t *testing.T) {
 	helmCharts := []types.HelmChartInfo{
 		{
-			Directory: "../../test_files/imageExtraction/helm-testcases",
+			Directory: "../../test_files/helm-testcases",
 			TemplateFiles: []types.FilePath{
-				{FullPath: "../../test_files/imageExtraction/helm-testcases/templates/valid-image.yaml", RelativePath: "templates/valid-image.yaml"},
-				{FullPath: "../../test_files/imageExtraction/helm-testcases/templates/extra-text-image.yaml", RelativePath: "templates/extra-text-image.yaml"},
-				{FullPath: "../../test_files/imageExtraction/helm-testcases/templates/commented-image.yaml", RelativePath: "templates/commented-image.yaml"},
-				{FullPath: "../../test_files/imageExtraction/helm-testcases/templates/no-tag-image.yaml", RelativePath: "templates/no-tag-image.yaml"},
-				{FullPath: "../../test_files/imageExtraction/helm-testcases/templates/multiple-images.yaml", RelativePath: "templates/multiple-images.yaml"},
-				{FullPath: "../../test_files/imageExtraction/helm-testcases/templates/no-images.yaml", RelativePath: "templates/no-images.yaml"},
-				{FullPath: "../../test_files/imageExtraction/helm-testcases/templates/invalid.yaml", RelativePath: "templates/invalid.yaml"},
+				{FullPath: "../../test_files/helm-testcases/templates/valid-image.yaml", RelativePath: "templates/valid-image.yaml"},
+				{FullPath: "../../test_files/helm-testcases/templates/extra-text-image.yaml", RelativePath: "templates/extra-text-image.yaml"},
+				{FullPath: "../../test_files/helm-testcases/templates/commented-image.yaml", RelativePath: "templates/commented-image.yaml"},
+				{FullPath: "../../test_files/helm-testcases/templates/no-tag-image.yaml", RelativePath: "templates/no-tag-image.yaml"},
+				{FullPath: "../../test_files/helm-testcases/templates/multiple-images.yaml", RelativePath: "templates/multiple-images.yaml"},
+				{FullPath: "../../test_files/helm-testcases/templates/no-images.yaml", RelativePath: "templates/no-images.yaml"},
+				{FullPath: "../../test_files/helm-testcases/templates/invalid.yaml", RelativePath: "templates/invalid.yaml"},
 			},
 		},
 	}
