@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: no-images
+spec:
+  containers:
+    - name: app
+      command: ["sleep", "3600"] 

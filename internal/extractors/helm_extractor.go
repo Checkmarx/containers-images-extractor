@@ -141,10 +141,17 @@ func extractSource(yamlBlock string) (string, error) {
 	return source, nil
 }
 
+// Relaxed regex: matches image name and tag even if there are extra characters after the tag (e.g., 'image: myrepo/myimage:mytag aaa')
+var imagePatternRelaxed = regexp.MustCompile(`^\s*image:\s*([^\s#]+:[^\s#]+)`) // Use this for now
+
+// Strict regex: matches only if the image reference is alone or followed by whitespace and/or a comment (e.g., 'image: myrepo/myimage:mytag' or 'image: myrepo/myimage:mytag # comment')
+var imagePatternStrict = regexp.MustCompile(`^\s*image:\s*([^\s#]+:[^\s#]+)\s*(#.*)?$`) // Use this if you want to enforce stricter matching
+
 // ExtractImagesWithLineNumbersFromHelmFiles extracts image references with line numbers and character indices from Helm template and values files.
 func ExtractImagesWithLineNumbersFromHelmFiles(helmCharts []types.HelmChartInfo) ([]types.ImageModel, error) {
 	var imagesFromHelmDirectories []types.ImageModel
-	imagePattern := regexp.MustCompile(`(?m)^\s*image:\s*([^\s#]+:[^\s#]+)\s*$`)
+	// Currently using the relaxed regex. Switch to imagePatternStrict for stricter behavior.
+	imagePattern := imagePatternRelaxed
 
 	for _, chart := range helmCharts {
 		// Process template files recursively

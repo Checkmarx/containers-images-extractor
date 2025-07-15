@@ -1,8 +1,9 @@
 package extractors
 
 import (
-	"github.com/Checkmarx/containers-types/types"
 	"testing"
+
+	"github.com/Checkmarx/containers-types/types"
 )
 
 func TestExtractImagesFromHelmFiles(t *testing.T) {
@@ -265,6 +266,116 @@ spec:
 			t.Errorf("Expected error extracting images from invalid YAML string, but got none")
 		}
 	})
+}
+
+type ExpectedLocation struct {
+	File  string
+	Line  int
+	Start int
+	End   int
+}
+
+func TestExtractImagesWithLineNumbersFromHelmFiles_Comprehensive(t *testing.T) {
+	helmCharts := []types.HelmChartInfo{
+		{
+			Directory: "../../test_files/imageExtraction/helm-testcases",
+			TemplateFiles: []types.FilePath{
+				{FullPath: "../../test_files/imageExtraction/helm-testcases/templates/valid-image.yaml", RelativePath: "templates/valid-image.yaml"},
+				{FullPath: "../../test_files/imageExtraction/helm-testcases/templates/extra-text-image.yaml", RelativePath: "templates/extra-text-image.yaml"},
+				{FullPath: "../../test_files/imageExtraction/helm-testcases/templates/commented-image.yaml", RelativePath: "templates/commented-image.yaml"},
+				{FullPath: "../../test_files/imageExtraction/helm-testcases/templates/no-tag-image.yaml", RelativePath: "templates/no-tag-image.yaml"},
+				{FullPath: "../../test_files/imageExtraction/helm-testcases/templates/multiple-images.yaml", RelativePath: "templates/multiple-images.yaml"},
+				{FullPath: "../../test_files/imageExtraction/helm-testcases/templates/no-images.yaml", RelativePath: "templates/no-images.yaml"},
+				{FullPath: "../../test_files/imageExtraction/helm-testcases/templates/invalid.yaml", RelativePath: "templates/invalid.yaml"},
+			},
+		},
+	}
+
+	images, err := ExtractImagesWithLineNumbersFromHelmFiles(helmCharts)
+	if err != nil {
+		t.Fatalf("Error extracting images: %v", err)
+	}
+
+	// Build a map for easy lookup: image name -> []ImageLocation
+	found := make(map[string][]types.ImageLocation)
+	for _, img := range images {
+		found[img.Name] = append(found[img.Name], img.ImageLocations...)
+	}
+
+	t.Run("Valid image in template", func(t *testing.T) {
+		assertImageFoundWithLocations(t, found, "myrepo/valid:1.0.0", []ExpectedLocation{{"templates/valid-image.yaml", 7, 13, 31}})
+	})
+	t.Run("Image with extra text and inline comment in template", func(t *testing.T) {
+		assertImageFoundWithLocations(t, found, "myrepo/extratext:3.0.0", []ExpectedLocation{
+			{"templates/extra-text-image.yaml", 7, 13, 35},
+			{"templates/extra-text-image.yaml", 9, 13, 35},
+		})
+	})
+	t.Run("Multiple images in one file", func(t *testing.T) {
+		assertImageFoundWithLocations(t, found, "myrepo/first:1.0.0", []ExpectedLocation{{"templates/multiple-images.yaml", 7, 13, 31}})
+		assertImageFoundWithLocations(t, found, "myrepo/second:2.0.0", []ExpectedLocation{{"templates/multiple-images.yaml", 9, 13, 32}})
+	})
+	t.Run("Image in values.yaml", func(t *testing.T) {
+		assertImageFoundWithLocations(t, found, "myrepo/valuesimage:1.2.3", []ExpectedLocation{{"values.yaml", 0, 7, 31}})
+	})
+	t.Run("Image in values-extra.yaml", func(t *testing.T) {
+		assertImageFoundWithLocations(t, found, "myrepo/valuesextra:4.5.6", []ExpectedLocation{{"values-extra.yaml", 0, 7, 31}})
+	})
+
+	t.Run("Commented-out image in template", func(t *testing.T) {
+		assertImageNotFound(t, found, "myrepo/commented:2.0.0")
+	})
+	t.Run("Image without tag in template", func(t *testing.T) {
+		assertImageNotFound(t, found, "myrepo/notag")
+	})
+	t.Run("No images in file", func(t *testing.T) {
+		assertNoImageFromFile(t, found, "templates/no-images.yaml")
+	})
+	t.Run("Invalid YAML file", func(t *testing.T) {
+		assertNoImageFromFile(t, found, "templates/invalid.yaml")
+	})
+	t.Run("Commented-out image in values.yml", func(t *testing.T) {
+		assertImageNotFound(t, found, "myrepo/commented:7.8.9")
+	})
+}
+
+// Helper: assert that all expected locations for an image are found
+func assertImageFoundWithLocations(t *testing.T, found map[string][]types.ImageLocation, imageName string, expected []ExpectedLocation) {
+	locs, ok := found[imageName]
+	if !ok {
+		t.Errorf("Expected image %q, but not found", imageName)
+		return
+	}
+	for _, exp := range expected {
+		matched := false
+		for _, loc := range locs {
+			if loc.Path == exp.File && loc.Line == exp.Line && loc.StartIndex == exp.Start && loc.EndIndex == exp.End {
+				matched = true
+				break
+			}
+		}
+		if !matched {
+			t.Errorf("Image %q: expected location %+v not found in actual locations: %+v", imageName, exp, locs)
+		}
+	}
+}
+
+// Helper: assert that an image is not found
+func assertImageNotFound(t *testing.T, found map[string][]types.ImageLocation, imageName string) {
+	if _, ok := found[imageName]; ok {
+		t.Errorf("Did not expect image %q to be found, but it was", imageName)
+	}
+}
+
+// Helper: assert that no image is found from a given file
+func assertNoImageFromFile(t *testing.T, found map[string][]types.ImageLocation, file string) {
+	for _, locs := range found {
+		for _, loc := range locs {
+			if loc.Path == file {
+				t.Errorf("Did not expect any image to be found in file %q, but found one", file)
+			}
+		}
+	}
 }
 
 func checkHelmResult(t *testing.T, images []types.ImageModel, expectedImages map[string]types.ImageLocation) {
