@@ -21,8 +21,8 @@ func mergeDuplicates(imageModels []types.ImageModel) []types.ImageModel {
 
 	for _, img := range imageModels {
 		if _, ok := aggregated[img.Name]; !ok {
-			// If the image name is not yet in the result, add it with its locations
-			result = append(result, types.ImageModel{Name: img.Name, ImageLocations: img.ImageLocations})
+			// If the image name is not yet in the result, add it with its locations and IsSha value
+			result = append(result, types.ImageModel{Name: img.Name, ImageLocations: img.ImageLocations, IsSha: img.IsSha})
 			aggregated[img.Name] = img.ImageLocations
 		} else {
 			// If the image name is already in the result, merge the locations
