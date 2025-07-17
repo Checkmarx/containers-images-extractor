@@ -29,7 +29,7 @@ func mergeDuplicates(imageModels []types.ImageModel) []types.ImageModel {
 			for _, location := range img.ImageLocations {
 				found := false
 				for _, existingLocation := range aggregated[img.Name] {
-					if existingLocation.Origin == location.Origin && existingLocation.Path == location.Path {
+					if isSameLocation(location, existingLocation) {
 						found = true
 						break
 					}
@@ -50,4 +50,10 @@ func mergeDuplicates(imageModels []types.ImageModel) []types.ImageModel {
 	}
 
 	return result
+}
+
+func isSameLocation(loc1, loc2 types.ImageLocation) bool {
+	return loc1.Origin == loc2.Origin && loc1.Path == loc2.Path &&
+		loc1.FinalStage == loc2.FinalStage && loc1.Line == loc2.Line &&
+		loc1.StartIndex == loc2.StartIndex && loc1.EndIndex == loc2.EndIndex
 }
