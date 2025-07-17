@@ -125,7 +125,7 @@ func (ie *imagesExtractor) ExtractAndMergeImagesFromFilesWithLineInfo(files type
 		dockerComposeFileImages = append(dockerComposeFileImages, composeImages...)
 	}
 
-	helmImages, extErr := extractors.ExtractImagesFromHelmFiles(files.Helm)
+	helmImages, extErr := extractors.ExtractImagesWithLineNumbersFromHelmFiles(files.Helm)
 	if extErr != nil {
 		log.Err(extErr).Msg("Could not extract images from helm files")
 		return nil, extErr

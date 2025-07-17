@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: no-tag-image
+spec:
+  containers:
+    - name: app
+      image: myrepo/notag 
