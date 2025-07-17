@@ -67,7 +67,7 @@ func extractImagesFromDockerfile(filePath types.FilePath, envFiles map[string]ma
 		}
 
 		// Parse FROM instructions
-		if match := regexp.MustCompile(`^\s*FROM\s+(?:--platform=[^\s]+\s+)?([\w./-]+(?::[\w.-]+)?)(?:\s+AS\s+(\w+))?`).FindStringSubmatch(line); match != nil {
+		if match := regexp.MustCompile(`^\s*FROM\s+(?:--platform=[^\s]+\s+)?([\w./-]+(?::[\w.-]+)?)(?:\s+AS\s+([a-zA-Z0-9][a-zA-Z0-9_.-]*))?`).FindStringSubmatch(line); match != nil {
 			imageName := match[1]
 			alias := match[2]
 
@@ -85,18 +85,24 @@ func extractImagesFromDockerfile(filePath types.FilePath, envFiles map[string]ma
 			}
 		}
 
-		if match := regexp.MustCompile(`\bFROM\s+(?:--platform=[^\s]+\s+)?([\w./-]+)(?::([\w.-]+))?\b`).FindStringSubmatch(line); match != nil {
+		if match := regexp.MustCompile(`\bFROM\s+(?:--platform=[^\s]+\s+)?([^\s:@]+)(?::([^\s@]+))?(@sha256:[a-fA-F0-9]{64})?\b`).FindStringSubmatch(line); match != nil {
 			imageName := match[1]
 			tag := match[2]
+			digest := match[3]
 
 			if imageName == "scratch" {
 				continue
 			}
-			if tag == "" {
-				tag = "latest"
-			}
 
-			fullImageName := fmt.Sprintf("%s:%s", imageName, tag)
+			fullImageName := imageName
+			if tag != "" {
+				fullImageName += ":" + tag
+			} else {
+				fullImageName += ":latest"
+			}
+			if digest != "" {
+				fullImageName += digest
+			}
 
 			if realName, ok := aliases[imageName]; ok {
 				if realName != imageName {
@@ -113,7 +119,11 @@ func extractImagesFromDockerfile(filePath types.FilePath, envFiles map[string]ma
 				imgIdx = indices[2]
 				imgEnd = indices[3]
 				fmt.Printf("DEBUG: imgIdx=%d, imgEnd=%d, matched='%s'\n", imgIdx, imgEnd, line[imgIdx:imgEnd])
-				// Removed the code that extends imgEnd by the tag length
+			}
+
+			isSha := false
+			if digest != "" {
+				isSha = true
 			}
 
 			imageNames = append(imageNames, types.ImageModel{
@@ -128,6 +138,7 @@ func extractImagesFromDockerfile(filePath types.FilePath, envFiles map[string]ma
 						EndIndex:   imgEnd,
 					},
 				},
+				IsSha: isSha,
 			})
 		}
 	}
