@@ -39,10 +39,10 @@ func TestExtractAndMergeImagesFromFiles(t *testing.T) {
 				},
 			},
 			UserInput: []types.ImageModel{
-				{Name: "debian:11", ImageLocations: []types.ImageLocation{{Origin: types.UserInput, Path: types.NoFilePath}}},
+				{Name: "debian:11", ImageLocations: []types.ImageLocation{{Origin: types.UserInput, Path: types.CustomImages}}},
 			},
 			ExpectedImages: []types.ImageModel{
-				{Name: "debian:11", ImageLocations: []types.ImageLocation{{Origin: types.UserInput, Path: types.NoFilePath, Line: 0, StartIndex: 0, EndIndex: 0}}},
+				{Name: "debian:11", ImageLocations: []types.ImageLocation{{Origin: types.UserInput, Path: types.CustomImages, Line: 0, StartIndex: 0, EndIndex: 0}}},
 				{Name: "mcr.microsoft.com/dotnet/sdk:6.0", ImageLocations: []types.ImageLocation{{Origin: types.DockerFileOrigin, Path: "Dockerfile", FinalStage: false, Line: 1, StartIndex: 5, EndIndex: 37}}},
 				{Name: "mcr.microsoft.com/dotnet/aspnet:6.0", ImageLocations: []types.ImageLocation{{Origin: types.DockerFileOrigin, Path: "Dockerfile", FinalStage: true, Line: 25, StartIndex: 5, EndIndex: 40}}},
 				{Name: "buildimage:latest", ImageLocations: []types.ImageLocation{{Origin: types.DockerComposeFileOrigin, Path: "docker-compose1.yml", Line: 0, StartIndex: 0, EndIndex: 0}}},
@@ -61,11 +61,11 @@ func TestExtractAndMergeImagesFromFiles(t *testing.T) {
 				},
 			},
 			UserInput: []types.ImageModel{
-				{Name: "mcr.microsoft.com/dotnet/sdk:6.0", ImageLocations: []types.ImageLocation{{Origin: types.UserInput, Path: types.NoFilePath, Line: 1, StartIndex: 5, EndIndex: 37}}},
+				{Name: "mcr.microsoft.com/dotnet/sdk:6.0", ImageLocations: []types.ImageLocation{{Origin: types.UserInput, Path: types.CustomImages, Line: 1, StartIndex: 5, EndIndex: 37}}},
 			},
 			ExpectedImages: []types.ImageModel{
 				{Name: "mcr.microsoft.com/dotnet/sdk:6.0", ImageLocations: []types.ImageLocation{
-					{Origin: types.UserInput, Path: types.NoFilePath, Line: 1, StartIndex: 5, EndIndex: 37},
+					{Origin: types.UserInput, Path: types.CustomImages, Line: 1, StartIndex: 5, EndIndex: 37},
 					{Origin: types.DockerFileOrigin, Path: "Dockerfile", Line: 1, StartIndex: 5, EndIndex: 37},
 					{Origin: types.DockerComposeFileOrigin, Path: "docker-compose-4.yml", Line: 0, StartIndex: 0, EndIndex: 0},
 				}},
@@ -80,12 +80,12 @@ func TestExtractAndMergeImagesFromFiles(t *testing.T) {
 				},
 			},
 			UserInput: []types.ImageModel{
-				{Name: "debian:11", ImageLocations: []types.ImageLocation{{Origin: types.UserInput, Path: types.NoFilePath}}},
+				{Name: "debian:11", ImageLocations: []types.ImageLocation{{Origin: types.UserInput, Path: types.CustomImages}}},
 			},
 			ExpectedImages: []types.ImageModel{
 				{Name: "mcr.microsoft.com/dotnet/sdk:6.0", ImageLocations: []types.ImageLocation{{Origin: types.DockerFileOrigin, Path: "Dockerfile", FinalStage: false, Line: 1, StartIndex: 5, EndIndex: 37}}},
 				{Name: "mcr.microsoft.com/dotnet/aspnet:6.0", ImageLocations: []types.ImageLocation{{Origin: types.DockerFileOrigin, Path: "Dockerfile", FinalStage: true, Line: 25, StartIndex: 5, EndIndex: 40}}},
-				{Name: "debian:11", ImageLocations: []types.ImageLocation{{Origin: types.UserInput, Path: types.NoFilePath, Line: 0, StartIndex: 0, EndIndex: 0}}}},
+				{Name: "debian:11", ImageLocations: []types.ImageLocation{{Origin: types.UserInput, Path: types.CustomImages, Line: 0, StartIndex: 0, EndIndex: 0}}}},
 		},
 		{
 			Name: "OnlyDockerComposeFound",
@@ -95,11 +95,11 @@ func TestExtractAndMergeImagesFromFiles(t *testing.T) {
 				},
 			},
 			UserInput: []types.ImageModel{
-				{Name: "debian:11", ImageLocations: []types.ImageLocation{{Origin: types.UserInput, Path: types.NoFilePath}}},
+				{Name: "debian:11", ImageLocations: []types.ImageLocation{{Origin: types.UserInput, Path: types.CustomImages}}},
 			},
 			ExpectedImages: []types.ImageModel{
 				{Name: "mcr.microsoft.com/dotnet/sdk:6.0", ImageLocations: []types.ImageLocation{{Origin: types.DockerComposeFileOrigin, Path: "docker-compose-4.yml", Line: 0, StartIndex: 0, EndIndex: 0}}},
-				{Name: "debian:11", ImageLocations: []types.ImageLocation{{Origin: types.UserInput, Path: types.NoFilePath, Line: 0, StartIndex: 0, EndIndex: 0}}},
+				{Name: "debian:11", ImageLocations: []types.ImageLocation{{Origin: types.UserInput, Path: types.CustomImages, Line: 0, StartIndex: 0, EndIndex: 0}}},
 			},
 		},
 		{
@@ -115,10 +115,10 @@ func TestExtractAndMergeImagesFromFiles(t *testing.T) {
 				},
 			},
 			UserInput: []types.ImageModel{
-				{Name: "debian:11", ImageLocations: []types.ImageLocation{{Origin: types.UserInput, Path: types.NoFilePath}}},
+				{Name: "debian:11", ImageLocations: []types.ImageLocation{{Origin: types.UserInput, Path: types.CustomImages}}},
 			},
 			ExpectedImages: []types.ImageModel{
-				{Name: "debian:11", ImageLocations: []types.ImageLocation{{Origin: types.UserInput, Path: types.NoFilePath, Line: 0, StartIndex: 0, EndIndex: 0}}},
+				{Name: "debian:11", ImageLocations: []types.ImageLocation{{Origin: types.UserInput, Path: types.CustomImages, Line: 0, StartIndex: 0, EndIndex: 0}}},
 				{Name: "checkmarx.jfrog.io/ast-docker/containers-worker:b201b1f", ImageLocations: []types.ImageLocation{{Origin: types.HelmFileOrigin, Path: "containers/templates/containers-worker.yaml", Line: 0, StartIndex: 0, EndIndex: 0}}},
 				{Name: "checkmarx.jfrog.io/ast-docker/image-insights:f4b507b", ImageLocations: []types.ImageLocation{{Origin: types.HelmFileOrigin, Path: "containers/templates/image-insights.yaml", Line: 0, StartIndex: 0, EndIndex: 0}}},
 			},
