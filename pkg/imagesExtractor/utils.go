@@ -152,7 +152,6 @@ func findHelmFilesInDirectory(scanPath string) ([]types.HelmChartInfo, error) {
 		return nil, err
 	}
 
-	// Create and return HelmChartInfo structure
 	return createHelmChartInfo(helmDir, valuesFiles, templateFiles), nil
 }
 
@@ -162,22 +161,18 @@ func validateScanPathAndFindHelmDir(scanPath string) (string, error) {
 		return "", fmt.Errorf("directory does not exist: %s", scanPath)
 	}
 
-	// Find helm directory in the hierarchy
 	helmDir, isUnderHelm := findHelmDirectory(scanPath)
 	if !isUnderHelm {
 		return "", fmt.Errorf("no helm directory found in path hierarchy: %s", scanPath)
 	}
 
-	// Get relative path from helm directory to scan path
 	relativeScanPath, err := filepath.Rel(helmDir, scanPath)
 	if err != nil {
 		return "", fmt.Errorf("could not get relative path: %v", err)
 	}
 
-	// Build the full path to scan
 	fullScanPath := filepath.Join(helmDir, relativeScanPath)
 
-	// Check if scan path is a directory
 	scanPathInfo, err := os.Stat(fullScanPath)
 	if err != nil {
 		return "", fmt.Errorf("could not get scan path info: %v", err)
@@ -198,28 +193,23 @@ func collectHelmFiles(scanPath, helmDir string) ([]string, []types.FilePath, err
 			return err
 		}
 
-		// Skip directories
 		if info.IsDir() {
 			return nil
 		}
 
-		// Check if file has .yml or .yaml extension
 		if !isYAMLFile(path) {
 			return nil
 		}
 
-		// Exclude Chart.yaml files
 		if info.Name() == "Chart.yaml" {
 			return nil
 		}
 
-		// Get relative path from helm directory
 		relativePath, err := filepath.Rel(helmDir, path)
 		if err != nil {
 			return err
 		}
 
-		// Classify file based on location
 		if isValuesFile(path, helmDir) {
 			valuesFiles = append(valuesFiles, relativePath)
 		} else if isTemplateFile(relativePath) {
@@ -261,7 +251,6 @@ func createHelmChartInfo(helmDir string, valuesFiles []string, templateFiles []t
 		return []types.HelmChartInfo{}
 	}
 
-	// Group files by type
 	helmChart := types.HelmChartInfo{
 		Directory: helmDir,
 	}
@@ -278,24 +267,20 @@ func createHelmChartInfo(helmDir string, valuesFiles []string, templateFiles []t
 		}
 	}
 
-	// Add template files
 	helmChart.TemplateFiles = templateFiles
 
 	return []types.HelmChartInfo{helmChart}
 }
 
 func findHelmDirectory(dirPath string) (string, bool) {
-	// Start with the directory itself
 	currentDir := dirPath
 
 	for {
-		// Check if current directory name matches helm conventions
 		dirName := filepath.Base(currentDir)
 		if isHelmDirectoryName(dirName) {
 			return currentDir, true
 		}
 
-		// Move up one level
 		parentDir := filepath.Dir(currentDir)
 		if parentDir == currentDir {
 			// Reached root directory
@@ -308,9 +293,7 @@ func findHelmDirectory(dirPath string) (string, bool) {
 }
 
 func isHelmDirectoryName(dirName string) bool {
-	// Convert to lowercase for case-insensitive comparison
 	dirNameLower := strings.ToLower(dirName)
 
-	// Check if directory name contains "helm"
 	return strings.Contains(dirNameLower, "helm")
 }

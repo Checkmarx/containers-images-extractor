@@ -101,9 +101,7 @@ func (ie *imagesExtractor) ExtractFiles(scanPath string, isFullHelmDirectory ...
 		log.Warn().Msgf("Could not extract docker or docker compose files: %s", err.Error())
 	}
 
-	// Conditional Helm discovery based on isFullHelmDirectory parameter
 	if fullHelmDir {
-		// Use existing logic for full Helm directory
 		helmCharts, err := findHelmCharts(filesPath)
 		if err != nil {
 			log.Warn().Msgf("Could not extract helm charts: %s", err.Error())
@@ -112,7 +110,6 @@ func (ie *imagesExtractor) ExtractFiles(scanPath string, isFullHelmDirectory ...
 			f.Helm = helmCharts
 		}
 	} else {
-		// Use new logic for single Helm file validation
 		helmCharts, err := findHelmFilesInDirectory(scanPath)
 		if err != nil {
 			log.Warn().Msgf("Could not validate helm file: %s", err.Error())
