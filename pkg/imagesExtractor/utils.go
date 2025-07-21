@@ -193,7 +193,7 @@ func collectHelmFiles(scanPath, helmDir string) ([]string, []types.FilePath, err
 	var valuesFiles []string
 	var templateFiles []types.FilePath
 
-	err := filepath.Walk(scanPath, func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk(helmDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}

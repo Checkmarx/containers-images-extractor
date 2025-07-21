@@ -205,13 +205,15 @@ func TestExtractFiles(t *testing.T) {
 	scenarios := []struct {
 		Name                 string
 		InputPath            string
+		IsFullHelmDirectory  bool
 		ExpectedFiles        types.FileImages
 		ExpectedSettingFiles map[string]map[string]string
 		ExpectedErrString    string
 	}{
 		{
-			Name:      "FolderInput",
-			InputPath: "../../test_files/imageExtraction",
+			Name:                "FolderInput",
+			InputPath:           "../../test_files/imageExtraction",
+			IsFullHelmDirectory: true,
 			ExpectedFiles: types.FileImages{
 				Dockerfile: []types.FilePath{
 					{FullPath: "../../test_files/imageExtraction/dockerfiles/Dockerfile", RelativePath: "dockerfiles/Dockerfile"},
@@ -245,8 +247,9 @@ func TestExtractFiles(t *testing.T) {
 			ExpectedErrString: "",
 		},
 		{
-			Name:      "TarInput",
-			InputPath: "../../test_files/withDockerInTar.tar.gz",
+			Name:                "TarInput",
+			InputPath:           "../../test_files/withDockerInTar.tar.gz",
+			IsFullHelmDirectory: true,
 			ExpectedFiles: types.FileImages{
 				Dockerfile: []types.FilePath{
 					{FullPath: "../../test_files/extracted_tar/withDockerInTar/Dockerfile", RelativePath: "withDockerInTar/Dockerfile"},
@@ -259,8 +262,9 @@ func TestExtractFiles(t *testing.T) {
 			ExpectedErrString: "",
 		},
 		{
-			Name:      "ZipInput",
-			InputPath: "../../test_files/withDockerInZip.zip",
+			Name:                "ZipInput",
+			InputPath:           "../../test_files/withDockerInZip.zip",
+			IsFullHelmDirectory: true,
 			ExpectedFiles: types.FileImages{
 				Dockerfile: []types.FilePath{
 					{FullPath: "../../test_files/extracted_zip/Dockerfile", RelativePath: "Dockerfile"},
@@ -272,13 +276,74 @@ func TestExtractFiles(t *testing.T) {
 			},
 			ExpectedErrString: "",
 		},
+		// New test scenarios for isFullHelmDirectory = false
+		{
+			Name:                "HelmDirectoryWithNewLogic",
+			InputPath:           "../../test_files/imageExtraction/helm",
+			IsFullHelmDirectory: false,
+			ExpectedFiles: types.FileImages{
+				Helm: []types.HelmChartInfo{
+					{
+						Directory:  "../../test_files/imageExtraction/helm",
+						ValuesFile: "", // Empty because our method didn't find values.yaml
+						TemplateFiles: []types.FilePath{
+							{FullPath: "../../test_files/imageExtraction/helm/templates/containers-worker.yaml", RelativePath: "templates/containers-worker.yaml"},
+							{FullPath: "../../test_files/imageExtraction/helm/templates/image-insights.yaml", RelativePath: "templates/image-insights.yaml"},
+						},
+					},
+				},
+			},
+			ExpectedErrString: "",
+		},
+		{
+			Name:                "NonHelmDirectoryWithNewLogic",
+			InputPath:           "../../test_files/imageExtraction/dockerfiles",
+			IsFullHelmDirectory: false,
+			ExpectedFiles: types.FileImages{
+				Dockerfile: []types.FilePath{
+					{FullPath: "../../test_files/imageExtraction/dockerfiles/Dockerfile", RelativePath: "Dockerfile"},
+					{FullPath: "../../test_files/imageExtraction/dockerfiles/Dockerfile-2", RelativePath: "Dockerfile-2"},
+					{FullPath: "../../test_files/imageExtraction/dockerfiles/Dockerfile-3", RelativePath: "Dockerfile-3"},
+					{FullPath: "../../test_files/imageExtraction/dockerfiles/Dockerfile-4", RelativePath: "Dockerfile-4"},
+					{FullPath: "../../test_files/imageExtraction/dockerfiles/Dockerfile-5", RelativePath: "Dockerfile-5"},
+					{FullPath: "../../test_files/imageExtraction/dockerfiles/Dockerfile.ubi9", RelativePath: "Dockerfile.ubi9"},
+				},
+			},
+			ExpectedErrString: "no helm directory found in path hierarchy",
+		},
+		{
+			Name:                "HelmDirectoryWithOldLogic",
+			InputPath:           "../../test_files/imageExtraction/helm",
+			IsFullHelmDirectory: true,
+			ExpectedFiles: types.FileImages{
+				Helm: []types.HelmChartInfo{
+					{
+						Directory:  "../../test_files/imageExtraction/helm",
+						ValuesFile: "values.yaml",
+						TemplateFiles: []types.FilePath{
+							{FullPath: "../../test_files/imageExtraction/helm/templates/containers-worker.yaml", RelativePath: "templates/containers-worker.yaml"},
+							{FullPath: "../../test_files/imageExtraction/helm/templates/image-insights.yaml", RelativePath: "templates/image-insights.yaml"},
+						},
+					},
+				},
+			},
+			ExpectedErrString: "",
+		},
 	}
 
 	// Run test scenarios
 	for _, scenario := range scenarios {
 		t.Run(scenario.Name, func(t *testing.T) {
-			// Run the function
-			files, settingsFiles, _, err := extractor.ExtractFiles(scenario.InputPath)
+			// Run the function with appropriate parameters
+			var files types.FileImages
+			var settingsFiles map[string]map[string]string
+			var err error
+
+			if scenario.IsFullHelmDirectory {
+				files, settingsFiles, _, err = extractor.ExtractFiles(scenario.InputPath, true)
+			} else {
+				files, settingsFiles, _, err = extractor.ExtractFiles(scenario.InputPath, false)
+			}
 
 			// Check for errors
 			if scenario.ExpectedErrString != "" {
@@ -286,6 +351,19 @@ func TestExtractFiles(t *testing.T) {
 					t.Errorf("Expected error containing '%s' but got '%v'", scenario.ExpectedErrString, err)
 				}
 			} else {
+				// Add debug output for Helm tests
+				if scenario.Name == "HelmDirectoryWithNewLogic" {
+					t.Logf("Actual Helm result: %+v", files.Helm)
+					if len(files.Helm) > 0 {
+						t.Logf("Directory: %s", files.Helm[0].Directory)
+						t.Logf("ValuesFile: %s", files.Helm[0].ValuesFile)
+						t.Logf("TemplateFiles count: %d", len(files.Helm[0].TemplateFiles))
+						for i, tf := range files.Helm[0].TemplateFiles {
+							t.Logf("TemplateFile[%d]: FullPath=%s, RelativePath=%s", i, tf.FullPath, tf.RelativePath)
+						}
+					}
+				}
+
 				if !CompareDockerfiles(files.Dockerfile, scenario.ExpectedFiles.Dockerfile) {
 					t.Errorf("Extracted Dockerfiles mismatch for scenario '%s'", scenario.Name)
 				}
