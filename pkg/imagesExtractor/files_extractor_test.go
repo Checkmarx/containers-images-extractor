@@ -1,6 +1,7 @@
 package imagesExtractor
 
 import (
+	"path/filepath"
 	"reflect"
 	"sort"
 	"strings"
@@ -392,7 +393,10 @@ func CompareDockerfiles(a, b []types.FilePath) bool {
 		return b[i].RelativePath < b[j].RelativePath
 	})
 	for i := range a {
-		if a[i].FullPath != b[i].FullPath {
+		// Normalize paths for cross-platform comparison
+		normalizedA := filepath.Clean(a[i].FullPath)
+		normalizedB := filepath.Clean(b[i].FullPath)
+		if normalizedA != normalizedB {
 			return false
 		}
 		if a[i].RelativePath != b[i].RelativePath {
@@ -414,7 +418,10 @@ func CompareDockerCompose(a, b []types.FilePath) bool {
 		return b[i].RelativePath < b[j].RelativePath
 	})
 	for i := range a {
-		if a[i].FullPath != b[i].FullPath {
+		// Normalize paths for cross-platform comparison
+		normalizedA := filepath.Clean(a[i].FullPath)
+		normalizedB := filepath.Clean(b[i].FullPath)
+		if normalizedA != normalizedB {
 			return false
 		}
 		if a[i].RelativePath != b[i].RelativePath {
@@ -461,7 +468,10 @@ func CompareHelm(a, b []types.HelmChartInfo) bool {
 		// Iterate over each FilePath struct in TemplateFiles slice
 		for j := range a[i].TemplateFiles {
 			// Compare FullPath and RelativePath of each FilePath struct
-			if a[i].TemplateFiles[j].FullPath != b[i].TemplateFiles[j].FullPath || a[i].TemplateFiles[j].RelativePath != b[i].TemplateFiles[j].RelativePath {
+			// Normalize paths for cross-platform comparison
+			normalizedA := filepath.Clean(a[i].TemplateFiles[j].FullPath)
+			normalizedB := filepath.Clean(b[i].TemplateFiles[j].FullPath)
+			if normalizedA != normalizedB || a[i].TemplateFiles[j].RelativePath != b[i].TemplateFiles[j].RelativePath {
 				return false
 			}
 		}

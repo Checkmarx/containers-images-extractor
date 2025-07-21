@@ -241,7 +241,7 @@ func collectHelmFiles(scanPath, helmDir string) ([]string, []types.FilePath, err
 
 func isValuesFile(filePath, helmDir string) bool {
 	fileDir := filepath.Dir(filePath)
-	isDirectlyUnderHelm := fileDir == helmDir
+	isDirectlyUnderHelm := filepath.Clean(fileDir) == filepath.Clean(helmDir)
 
 	if !isDirectlyUnderHelm {
 		return false
