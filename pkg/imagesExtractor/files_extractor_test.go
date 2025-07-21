@@ -309,7 +309,7 @@ func TestExtractFiles(t *testing.T) {
 					{FullPath: "../../test_files/imageExtraction/dockerfiles/Dockerfile.ubi9", RelativePath: "Dockerfile.ubi9"},
 				},
 			},
-			ExpectedErrString: "no helm directory found in path hierarchy",
+			ExpectedErrString: "", // No error expected - finding Dockerfiles is valid
 		},
 		{
 			Name:                "HelmDirectoryWithOldLogic",
@@ -351,19 +351,6 @@ func TestExtractFiles(t *testing.T) {
 					t.Errorf("Expected error containing '%s' but got '%v'", scenario.ExpectedErrString, err)
 				}
 			} else {
-				// Add debug output for Helm tests
-				if scenario.Name == "HelmDirectoryWithNewLogic" {
-					t.Logf("Actual Helm result: %+v", files.Helm)
-					if len(files.Helm) > 0 {
-						t.Logf("Directory: %s", files.Helm[0].Directory)
-						t.Logf("ValuesFile: %s", files.Helm[0].ValuesFile)
-						t.Logf("TemplateFiles count: %d", len(files.Helm[0].TemplateFiles))
-						for i, tf := range files.Helm[0].TemplateFiles {
-							t.Logf("TemplateFile[%d]: FullPath=%s, RelativePath=%s", i, tf.FullPath, tf.RelativePath)
-						}
-					}
-				}
-
 				if !CompareDockerfiles(files.Dockerfile, scenario.ExpectedFiles.Dockerfile) {
 					t.Errorf("Extracted Dockerfiles mismatch for scenario '%s'", scenario.Name)
 				}
@@ -377,6 +364,17 @@ func TestExtractFiles(t *testing.T) {
 					if !CompareSettingsFiles(settingsFiles, scenario.ExpectedSettingFiles) {
 						t.Errorf("Extracted Settings files charts mismatch for scenario '%s'", scenario.Name)
 					}
+				}
+
+				// Additional check for NonHelmDirectoryWithNewLogic: verify we tried helm and got nothing
+				if scenario.Name == "NonHelmDirectoryWithNewLogic" {
+					if len(files.Helm) != 0 {
+						t.Errorf("Expected no helm files found, but got %d helm files", len(files.Helm))
+					}
+					if len(files.Dockerfile) == 0 {
+						t.Errorf("Expected to find dockerfiles when helm validation fails, but found none")
+					}
+					t.Logf("Verified: Helm validation failed (0 helm files) but found %d dockerfiles", len(files.Dockerfile))
 				}
 			}
 		})
