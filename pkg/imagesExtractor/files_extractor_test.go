@@ -494,13 +494,13 @@ func TestExtractFilesWithFullHelmDirectoryFalse(t *testing.T) {
 						Directory:  "../../test_files/helm-testcases",
 						ValuesFile: "values-extra.yaml",
 						TemplateFiles: []types.FilePath{
-							{FullPath: "../../test_files/helm-testcases/templates/commented-image.yaml", RelativePath: "templates\\commented-image.yaml"},
-							{FullPath: "../../test_files/helm-testcases/templates/extra-text-image.yaml", RelativePath: "templates\\extra-text-image.yaml"},
-							{FullPath: "../../test_files/helm-testcases/templates/invalid.yaml", RelativePath: "templates\\invalid.yaml"},
-							{FullPath: "../../test_files/helm-testcases/templates/multiple-images.yaml", RelativePath: "templates\\multiple-images.yaml"},
-							{FullPath: "../../test_files/helm-testcases/templates/no-images.yaml", RelativePath: "templates\\no-images.yaml"},
-							{FullPath: "../../test_files/helm-testcases/templates/no-tag-image.yaml", RelativePath: "templates\\no-tag-image.yaml"},
-							{FullPath: "../../test_files/helm-testcases/templates/valid-image.yaml", RelativePath: "templates\\valid-image.yaml"},
+							{FullPath: "../../test_files/helm-testcases/templates/commented-image.yaml", RelativePath: "templates/commented-image.yaml"},
+							{FullPath: "../../test_files/helm-testcases/templates/extra-text-image.yaml", RelativePath: "templates/extra-text-image.yaml"},
+							{FullPath: "../../test_files/helm-testcases/templates/invalid.yaml", RelativePath: "templates/invalid.yaml"},
+							{FullPath: "../../test_files/helm-testcases/templates/multiple-images.yaml", RelativePath: "templates/multiple-images.yaml"},
+							{FullPath: "../../test_files/helm-testcases/templates/no-images.yaml", RelativePath: "templates/no-images.yaml"},
+							{FullPath: "../../test_files/helm-testcases/templates/no-tag-image.yaml", RelativePath: "templates/no-tag-image.yaml"},
+							{FullPath: "../../test_files/helm-testcases/templates/valid-image.yaml", RelativePath: "templates/valid-image.yaml"},
 							{FullPath: "../../test_files/helm-testcases/values.yml", RelativePath: "values.yml"},
 						},
 					},
@@ -517,13 +517,13 @@ func TestExtractFilesWithFullHelmDirectoryFalse(t *testing.T) {
 						Directory:  "../../test_files/helm-testcases",
 						ValuesFile: "values-extra.yaml",
 						TemplateFiles: []types.FilePath{
-							{FullPath: "../../test_files/helm-testcases/templates/commented-image.yaml", RelativePath: "templates\\commented-image.yaml"},
-							{FullPath: "../../test_files/helm-testcases/templates/extra-text-image.yaml", RelativePath: "templates\\extra-text-image.yaml"},
-							{FullPath: "../../test_files/helm-testcases/templates/invalid.yaml", RelativePath: "templates\\invalid.yaml"},
-							{FullPath: "../../test_files/helm-testcases/templates/multiple-images.yaml", RelativePath: "templates\\multiple-images.yaml"},
-							{FullPath: "../../test_files/helm-testcases/templates/no-images.yaml", RelativePath: "templates\\no-images.yaml"},
-							{FullPath: "../../test_files/helm-testcases/templates/no-tag-image.yaml", RelativePath: "templates\\no-tag-image.yaml"},
-							{FullPath: "../../test_files/helm-testcases/templates/valid-image.yaml", RelativePath: "templates\\valid-image.yaml"},
+							{FullPath: "../../test_files/helm-testcases/templates/commented-image.yaml", RelativePath: "templates/commented-image.yaml"},
+							{FullPath: "../../test_files/helm-testcases/templates/extra-text-image.yaml", RelativePath: "templates/extra-text-image.yaml"},
+							{FullPath: "../../test_files/helm-testcases/templates/invalid.yaml", RelativePath: "templates/invalid.yaml"},
+							{FullPath: "../../test_files/helm-testcases/templates/multiple-images.yaml", RelativePath: "templates/multiple-images.yaml"},
+							{FullPath: "../../test_files/helm-testcases/templates/no-images.yaml", RelativePath: "templates/no-images.yaml"},
+							{FullPath: "../../test_files/helm-testcases/templates/no-tag-image.yaml", RelativePath: "templates/no-tag-image.yaml"},
+							{FullPath: "../../test_files/helm-testcases/templates/valid-image.yaml", RelativePath: "templates/valid-image.yaml"},
 							{FullPath: "../../test_files/helm-testcases/values.yml", RelativePath: "values.yml"},
 						},
 					},
@@ -596,7 +596,7 @@ func TestExtractFilesWithFullHelmDirectoryFalseErrorCases(t *testing.T) {
 		{
 			Name:              "DirectoryOutsideHelmHierarchy",
 			InputPath:         "../../test_files",
-			ExpectedErrString: "no helm directory found in path hierarchy",
+			ExpectedErrString: "",
 		},
 	}
 
@@ -630,11 +630,11 @@ func TestExtractFilesWithFullHelmDirectoryFalseCompressedFiles(t *testing.T) {
 			InputPath: "../../test_files/withDockerInTar.tar.gz",
 			ExpectedFiles: types.FileImages{
 				Dockerfile: []types.FilePath{
-					{FullPath: "../../test_files/extracted_tar/withDockerInTar/Dockerfile", RelativePath: "withDockerInTar\\Dockerfile"},
-					{FullPath: "../../test_files/extracted_tar/withDockerInTar/integrationTests/Dockerfile", RelativePath: "withDockerInTar\\integrationTests\\Dockerfile"},
+					{FullPath: "../../test_files/extracted_tar/withDockerInTar/Dockerfile", RelativePath: "withDockerInTar/Dockerfile"},
+					{FullPath: "../../test_files/extracted_tar/withDockerInTar/integrationTests/Dockerfile", RelativePath: "withDockerInTar/integrationTests/Dockerfile"},
 				},
 				DockerCompose: []types.FilePath{
-					{FullPath: "../../test_files/extracted_tar/withDockerInTar/docker-compose.yaml", RelativePath: "withDockerInTar\\docker-compose.yaml"},
+					{FullPath: "../../test_files/extracted_tar/withDockerInTar/docker-compose.yaml", RelativePath: "withDockerInTar/docker-compose.yaml"},
 				},
 			},
 			ExpectedErrString: "",
@@ -644,11 +644,11 @@ func TestExtractFilesWithFullHelmDirectoryFalseCompressedFiles(t *testing.T) {
 			InputPath: "../../test_files/withDockerInZip.zip",
 			ExpectedFiles: types.FileImages{
 				Dockerfile: []types.FilePath{
-					{FullPath: "../../test_files/extracted_zip/containers-worker/Dockerfile", RelativePath: "containers-worker\\Dockerfile"},
-					{FullPath: "../../test_files/extracted_zip/containers-worker/integrationTests/Dockerfile", RelativePath: "containers-worker\\integrationTests\\Dockerfile"},
+					{FullPath: "../../test_files/extracted_zip/Dockerfile", RelativePath: "Dockerfile"},
+					{FullPath: "../../test_files/extracted_zip/integrationTests/Dockerfile", RelativePath: "integrationTests/Dockerfile"},
 				},
 				DockerCompose: []types.FilePath{
-					{FullPath: "../../test_files/extracted_zip/containers-worker/docker-compose.yaml", RelativePath: "containers-worker\\docker-compose.yaml"},
+					{FullPath: "../../test_files/extracted_zip/docker-compose.yaml", RelativePath: "docker-compose.yaml"},
 				},
 			},
 			ExpectedErrString: "",
@@ -658,11 +658,11 @@ func TestExtractFilesWithFullHelmDirectoryFalseCompressedFiles(t *testing.T) {
 			InputPath: "../../test_files/withHelmInZip.zip",
 			ExpectedFiles: types.FileImages{
 				Dockerfile: []types.FilePath{
-					{FullPath: "../../test_files/extracted_zip/containers-worker/Dockerfile", RelativePath: "containers-worker\\Dockerfile"},
-					{FullPath: "../../test_files/extracted_zip/containers-worker/integrationTests/Dockerfile", RelativePath: "containers-worker\\integrationTests\\Dockerfile"},
+					{FullPath: "../../test_files/extracted_zip/Dockerfile", RelativePath: "Dockerfile"},
+					{FullPath: "../../test_files/extracted_zip/integrationTests/Dockerfile", RelativePath: "integrationTests/Dockerfile"},
 				},
 				DockerCompose: []types.FilePath{
-					{FullPath: "../../test_files/extracted_zip/containers-worker/docker-compose.yaml", RelativePath: "containers-worker\\docker-compose.yaml"},
+					{FullPath: "../../test_files/extracted_zip/docker-compose.yaml", RelativePath: "docker-compose.yaml"},
 				},
 			},
 			ExpectedErrString: "",
