@@ -67,7 +67,7 @@ func extractImagesFromDockerfile(filePath types.FilePath, envFiles map[string]ma
 		}
 
 		// Parse FROM instructions
-		if match := regexp.MustCompile(`(?i)^\s*FROM\s+(?:--platform=[^\s]+\s+)?([\w./-]+(?::[\w.-]+)?(?:@sha256:[a-fA-F0-9]{64})?)(?:\s+AS\s+([a-zA-Z0-9][a-zA-Z0-9_.-]*))?`).FindStringSubmatch(strings.TrimSpace(line)); match != nil {
+		if match := regexp.MustCompile(`(?i)\bFROM\s+(?:--platform=[^\s]+\s+)?([^\s:@]+(?::[^\s@]+)?(?:@sha256:[a-fA-F0-9]{64})?)(?:\s+AS\s+([a-zA-Z0-9][a-zA-Z0-9_.-]*))?`).FindStringSubmatch(line); match != nil {
 			imageName := match[1]
 			alias := match[2]
 
