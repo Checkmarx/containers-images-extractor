@@ -138,3 +138,162 @@ func printFilePaths(f []types.FilePath, message string) {
 		}(), ", "))
 	}
 }
+
+func findHelmFilesInDirectory(scanPath string) ([]types.HelmChartInfo, error) {
+	// Validate scan path and find helm directory
+	helmDir, err := validateScanPathAndFindHelmDir(scanPath)
+	if err != nil {
+		return nil, err
+	}
+
+	// Collect all valid Helm files
+	valuesFiles, templateFiles, err := collectHelmFiles(helmDir, helmDir)
+	if err != nil {
+		return nil, err
+	}
+
+	return createHelmChartInfo(helmDir, valuesFiles, templateFiles), nil
+}
+
+func validateScanPathAndFindHelmDir(scanPath string) (string, error) {
+	// Check if directory exists
+	if _, err := os.Stat(scanPath); os.IsNotExist(err) {
+		return "", fmt.Errorf("directory does not exist: %s", scanPath)
+	}
+
+	helmDir, isUnderHelm := findHelmDirectory(scanPath)
+	if !isUnderHelm {
+		return "", fmt.Errorf("no helm directory found in path hierarchy: %s", scanPath)
+	}
+
+	relativeScanPath, err := filepath.Rel(helmDir, scanPath)
+	if err != nil {
+		return "", fmt.Errorf("could not get relative path: %v", err)
+	}
+
+	fullScanPath := filepath.Join(helmDir, relativeScanPath)
+
+	scanPathInfo, err := os.Stat(fullScanPath)
+	if err != nil {
+		return "", fmt.Errorf("could not get scan path info: %v", err)
+	}
+	if !scanPathInfo.IsDir() {
+		return "", fmt.Errorf("scan path must be a directory: %s", scanPath)
+	}
+
+	return helmDir, nil
+}
+
+func collectHelmFiles(scanPath, helmDir string) ([]string, []types.FilePath, error) {
+	var valuesFiles []string
+	var templateFiles []types.FilePath
+
+	err := filepath.Walk(helmDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if info.IsDir() {
+			return nil
+		}
+
+		if !isYAMLFile(path) {
+			return nil
+		}
+
+		if info.Name() == "Chart.yaml" {
+			return nil
+		}
+
+		relativePath, err := filepath.Rel(helmDir, path)
+		if err != nil {
+			return err
+		}
+
+		if isValuesFile(path, helmDir) {
+			valuesFiles = append(valuesFiles, relativePath)
+		} else if isTemplateFile(relativePath) {
+			templateFiles = append(templateFiles, types.FilePath{
+				FullPath:     path,
+				RelativePath: relativePath,
+			})
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return nil, nil, fmt.Errorf("error walking directory: %v", err)
+	}
+
+	return valuesFiles, templateFiles, nil
+}
+
+func isValuesFile(filePath, helmDir string) bool {
+	fileDir := filepath.Dir(filePath)
+	isDirectlyUnderHelm := filepath.Clean(fileDir) == filepath.Clean(helmDir)
+
+	if !isDirectlyUnderHelm {
+		return false
+	}
+
+	fileName := filepath.Base(filePath)
+	return strings.Contains(strings.ToLower(fileName), "values")
+}
+
+func isTemplateFile(relativePath string) bool {
+	relativeDir := filepath.Dir(relativePath)
+	return strings.HasPrefix(relativeDir, "templates") || relativeDir == "templates"
+}
+
+func createHelmChartInfo(helmDir string, valuesFiles []string, templateFiles []types.FilePath) []types.HelmChartInfo {
+	if len(valuesFiles) == 0 && len(templateFiles) == 0 {
+		return []types.HelmChartInfo{}
+	}
+
+	helmChart := types.HelmChartInfo{
+		Directory: helmDir,
+	}
+
+	// Add values files (take the first one as ValuesFile, others could be added to TemplateFiles if needed)
+	if len(valuesFiles) > 0 {
+		helmChart.ValuesFile = valuesFiles[0]
+		// Add remaining values files to template files for completeness
+		for i := 1; i < len(valuesFiles); i++ {
+			templateFiles = append(templateFiles, types.FilePath{
+				FullPath:     filepath.Join(helmDir, valuesFiles[i]),
+				RelativePath: valuesFiles[i],
+			})
+		}
+	}
+
+	helmChart.TemplateFiles = templateFiles
+
+	return []types.HelmChartInfo{helmChart}
+}
+
+func findHelmDirectory(dirPath string) (string, bool) {
+	currentDir := dirPath
+
+	for {
+		dirName := filepath.Base(currentDir)
+		if isHelmDirectoryName(dirName) {
+			return currentDir, true
+		}
+
+		parentDir := filepath.Dir(currentDir)
+		if parentDir == currentDir {
+			// Reached root directory
+			break
+		}
+		currentDir = parentDir
+	}
+
+	return "", false
+}
+
+func isHelmDirectoryName(dirName string) bool {
+	dirNameLower := strings.ToLower(dirName)
+
+	return strings.Contains(dirNameLower, "helm")
+}

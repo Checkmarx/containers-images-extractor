@@ -473,3 +473,144 @@ func TestDockerComposeExtractorWithLineNumbersAndIndices(t *testing.T) {
 
 	t.Logf("Image '%s' found at line %d, indices [%d:%d]", img.Name, loc.Line, loc.StartIndex, loc.EndIndex)
 }
+
+// TestExtractFilesWithFullHelmDirectoryFalse tests the ExtractFiles method when isFullHelmDirectory is false
+func TestExtractFilesWithFullHelmDirectoryFalse(t *testing.T) {
+	extractor := NewImagesExtractor()
+
+	scenarios := []struct {
+		Name              string
+		InputPath         string
+		ShouldHaveHelm    bool
+		ExpectedErrString string
+	}{
+		{
+			Name:              "ValidHelmDirectoryWithFalseFlag",
+			InputPath:         "../../test_files/helm-testcases",
+			ShouldHaveHelm:    true,
+			ExpectedErrString: "",
+		},
+		{
+			Name:              "ValidHelmDirectoryWithTemplatesSubdirectory",
+			InputPath:         "../../test_files/helm-testcases/templates",
+			ShouldHaveHelm:    true,
+			ExpectedErrString: "",
+		},
+		{
+			Name:              "NonHelmDirectoryWithFalseFlag",
+			InputPath:         "../../test_files/imageExtraction/dockerfiles",
+			ShouldHaveHelm:    false,
+			ExpectedErrString: "",
+		},
+	}
+
+	// Run test scenarios
+	for _, scenario := range scenarios {
+		t.Run(scenario.Name, func(t *testing.T) {
+			// Run the function with isFullHelmDirectory = false
+			files, _, _, err := extractor.ExtractFiles(scenario.InputPath, false)
+
+			// Check for errors
+			if scenario.ExpectedErrString != "" {
+				if err == nil || !strings.Contains(err.Error(), scenario.ExpectedErrString) {
+					t.Errorf("Expected error containing '%s' but got '%v'", scenario.ExpectedErrString, err)
+				}
+			} else {
+				// Check that Helm charts are found when expected
+				if scenario.ShouldHaveHelm {
+					if len(files.Helm) == 0 {
+						t.Errorf("Expected Helm charts to be found for scenario '%s'", scenario.Name)
+					} else {
+						// Verify basic structure
+						chart := files.Helm[0]
+						if chart.Directory != "../../test_files/helm-testcases" && chart.Directory != "..\\..\\test_files\\helm-testcases" {
+							t.Errorf("Expected directory '../../test_files/helm-testcases', got '%s'", chart.Directory)
+						}
+						if chart.ValuesFile != "values-extra.yaml" {
+							t.Errorf("Expected values file 'values-extra.yaml', got '%s'", chart.ValuesFile)
+						}
+						if len(chart.TemplateFiles) == 0 {
+							t.Errorf("Expected template files to be found")
+						}
+					}
+				} else {
+					if len(files.Helm) > 0 {
+						t.Errorf("Expected no Helm charts for scenario '%s', but found %d", scenario.Name, len(files.Helm))
+					}
+				}
+			}
+		})
+	}
+}
+
+// TestExtractFilesWithFullHelmDirectoryFalseErrorCases tests error scenarios when isFullHelmDirectory is false
+func TestExtractFilesWithFullHelmDirectoryFalseErrorCases(t *testing.T) {
+	extractor := NewImagesExtractor()
+
+	scenarios := []struct {
+		Name              string
+		InputPath         string
+		ExpectedErrString string
+	}{
+		{
+			Name:              "NonExistentDirectory",
+			InputPath:         "../../test_files/non-existent-directory",
+			ExpectedErrString: "unsupported file type",
+		},
+		{
+			Name:              "FileInsteadOfDirectory",
+			InputPath:         "../../test_files/helm-testcases/Chart.yaml",
+			ExpectedErrString: "unsupported file type",
+		},
+	}
+
+	// Run test scenarios
+	for _, scenario := range scenarios {
+		t.Run(scenario.Name, func(t *testing.T) {
+			// Run the function with isFullHelmDirectory = false
+			_, _, _, err := extractor.ExtractFiles(scenario.InputPath, false)
+
+			// Check for errors
+			if err == nil || !strings.Contains(err.Error(), scenario.ExpectedErrString) {
+				t.Errorf("Expected error containing '%s' but got '%v'", scenario.ExpectedErrString, err)
+			}
+		})
+	}
+}
+
+// TestExtractFilesWithFullHelmDirectoryFalseDefaultBehavior tests that the default behavior (no parameter) is the same as true
+func TestExtractFilesWithFullHelmDirectoryFalseDefaultBehavior(t *testing.T) {
+	extractor := NewImagesExtractor()
+
+	// Test that calling ExtractFiles without the isFullHelmDirectory parameter
+	// produces the same result as calling it with true
+	scanPath := "../../test_files/imageExtraction"
+
+	filesDefault, settingsDefault, pathDefault, errDefault := extractor.ExtractFiles(scanPath)
+	filesTrue, settingsTrue, pathTrue, errTrue := extractor.ExtractFiles(scanPath, true)
+
+	// Check that both calls return the same results
+	if errDefault != nil || errTrue != nil {
+		t.Errorf("Unexpected errors: default=%v, true=%v", errDefault, errTrue)
+	}
+
+	if pathDefault != pathTrue {
+		t.Errorf("Expected same path, got default=%s, true=%s", pathDefault, pathTrue)
+	}
+
+	if !CompareDockerfiles(filesDefault.Dockerfile, filesTrue.Dockerfile) {
+		t.Errorf("Dockerfiles mismatch between default and true calls")
+	}
+
+	if !CompareDockerCompose(filesDefault.DockerCompose, filesTrue.DockerCompose) {
+		t.Errorf("Docker Compose files mismatch between default and true calls")
+	}
+
+	if !CompareHelm(filesDefault.Helm, filesTrue.Helm) {
+		t.Errorf("Helm charts mismatch between default and true calls")
+	}
+
+	if !CompareSettingsFiles(settingsDefault, settingsTrue) {
+		t.Errorf("Settings files mismatch between default and true calls")
+	}
+}

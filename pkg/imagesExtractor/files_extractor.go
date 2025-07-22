@@ -15,7 +15,7 @@ import (
 type ImagesExtractor interface {
 	ExtractAndMergeImagesFromFiles(files types.FileImages, images []types.ImageModel,
 		settingsFiles map[string]map[string]string) ([]types.ImageModel, error)
-	ExtractFiles(scanPath string) (types.FileImages, map[string]map[string]string, string, error)
+	ExtractFiles(scanPath string, isFullHelmDirectory ...bool) (types.FileImages, map[string]map[string]string, string, error)
 	SaveObjectToFile(folderPath string, obj interface{}) error
 	ExtractAndMergeImagesFromFilesWithLineInfo(files types.FileImages, images []types.ImageModel, settingsFiles map[string]map[string]string) ([]types.ImageModel, error)
 }
@@ -52,7 +52,13 @@ func (ie *imagesExtractor) ExtractAndMergeImagesFromFiles(files types.FileImages
 	return imagesFromFiles, nil
 }
 
-func (ie *imagesExtractor) ExtractFiles(scanPath string) (types.FileImages, map[string]map[string]string, string, error) {
+func (ie *imagesExtractor) ExtractFiles(scanPath string, isFullHelmDirectory ...bool) (types.FileImages, map[string]map[string]string, string, error) {
+	// Default to true (current behavior) if not provided
+	fullHelmDir := true
+	if len(isFullHelmDirectory) > 0 {
+		fullHelmDir = isFullHelmDirectory[0]
+	}
+
 	filesPath, err := extractCompressedPath(scanPath)
 	if err != nil {
 		log.Err(err).Msgf("Could not extract compressed folder")
@@ -95,13 +101,24 @@ func (ie *imagesExtractor) ExtractFiles(scanPath string) (types.FileImages, map[
 		log.Warn().Msgf("Could not extract docker or docker compose files: %s", err.Error())
 	}
 
-	helmCharts, err := findHelmCharts(filesPath)
-	if err != nil {
-		log.Warn().Msgf("Could not extract helm charts: %s", err.Error())
+	if fullHelmDir {
+		helmCharts, err := findHelmCharts(filesPath)
+		if err != nil {
+			log.Warn().Msgf("Could not extract helm charts: %s", err.Error())
+		}
+		if len(helmCharts) > 0 {
+			f.Helm = helmCharts
+		}
+	} else {
+		helmCharts, err := findHelmFilesInDirectory(scanPath)
+		if err != nil {
+			log.Warn().Msgf("Could not validate helm file: %s", err.Error())
+		}
+		if len(helmCharts) > 0 {
+			f.Helm = helmCharts
+		}
 	}
-	if len(helmCharts) > 0 {
-		f.Helm = helmCharts
-	}
+
 	printFilePaths(f.Dockerfile, "Successfully found dockerfiles")
 	printFilePaths(f.DockerCompose, "Successfully found docker compose files")
 
