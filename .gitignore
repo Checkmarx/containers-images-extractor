@@ -49,3 +49,4 @@ override.tf.json
 # Include tfplan imagesExtractor to ignore the plan output of command: terraform plan -out=tfplan
 # Folder view configuration imagesExtractor
 .DS_Store
+test_files/*
