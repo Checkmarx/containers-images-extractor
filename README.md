@@ -1,4 +1,4 @@
-# Containers Images Extractor
+# Containers Images Extractor 
 
 This project provides tools for extracting and merging image data from Dockerfiles, Docker Compose files, and Helm charts. The extracted image data can be saved to a file for further analysis or use. 
 
