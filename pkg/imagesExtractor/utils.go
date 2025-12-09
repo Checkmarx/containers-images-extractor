@@ -105,7 +105,7 @@ func getRelativePath(baseDir, filePath string) string {
 	if err != nil {
 		return filePath
 	}
-	// Normalize path separator to forward slashes for cross-platform consistency
+	//  Normalize path separator to forward slashes for cross-platform consistency
 	return filepath.ToSlash(relativePath)
 }
 
