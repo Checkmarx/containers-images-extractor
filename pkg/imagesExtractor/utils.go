@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	dockerfilePattern    = regexp.MustCompile(`^.*[d/D]ockerfile.*$`)
+	dockerfilePattern    = regexp.MustCompile(`^.*[d/D]ockerfile*$`)
 	dockerComposePattern = regexp.MustCompile(`^.*[d/D]ocker-compose.[Y/y]a?ml$`)
 )
 
