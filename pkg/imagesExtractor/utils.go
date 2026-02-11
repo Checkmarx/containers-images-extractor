@@ -44,6 +44,7 @@ func findHelmCharts(baseDir string) ([]types.HelmChartInfo, error) {
 
 			valuesFile := filepath.Join(path, "values.yaml")
 			relativeValuesPath, _ := filepath.Rel(baseDir, valuesFile)
+			relativeValuesPath = filepath.ToSlash(relativeValuesPath)
 
 			templatesDir := filepath.Join(path, "templates")
 
@@ -54,6 +55,7 @@ func findHelmCharts(baseDir string) ([]types.HelmChartInfo, error) {
 				}
 				if !templateInfo.IsDir() && isYAMLFile(templatePath) {
 					relativeTemplatePath, _ := filepath.Rel(baseDir, templatePath)
+					relativeTemplatePath = filepath.ToSlash(relativeTemplatePath)
 					templateFiles = append(templateFiles, types.FilePath{
 						FullPath:     templatePath,
 						RelativePath: relativeTemplatePath,
@@ -103,7 +105,8 @@ func getRelativePath(baseDir, filePath string) string {
 	if err != nil {
 		return filePath
 	}
-	return relativePath
+	//  Normalize path separator to forward slashes for cross-platform consistency
+	return filepath.ToSlash(relativePath)
 }
 
 func isYAMLFile(filePath string) bool {
@@ -209,6 +212,7 @@ func collectHelmFiles(scanPath, helmDir string) ([]string, []types.FilePath, err
 		if err != nil {
 			return err
 		}
+		relativePath = filepath.ToSlash(relativePath)
 
 		if isValuesFile(path, helmDir) {
 			valuesFiles = append(valuesFiles, relativePath)
