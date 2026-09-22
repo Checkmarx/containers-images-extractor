@@ -10,6 +10,7 @@ on:
 jobs:
   tag-and-release:
     if: github.event.pull_request.merged == true
+    environment: release
     runs-on: cx-public-ubuntu-x64
     steps:
       - name: Checkout the repository
