@@ -32,6 +32,7 @@ func ExtractImagesFromDockerfiles(filePaths []types.FilePath, envFiles map[strin
 func extractImagesFromDockerfile(filePath types.FilePath, envFiles map[string]map[string]string) ([]types.ImageModel, error) {
 	var imageNames []types.ImageModel
 	aliases := make(map[string]string)
+	stages := &dockerfileStages{}
 	argsAndEnv := make(map[string]string)
 	mergedEnvVars := resolveEnvVariables(filePath.FullPath, envFiles)
 
@@ -65,6 +66,8 @@ func extractImagesFromDockerfile(filePath types.FilePath, envFiles map[string]ma
 		if strings.HasPrefix(strings.TrimSpace(line), "#") {
 			continue
 		}
+
+		stages.parseLine(line, lineNum)
 
 		// Parse FROM instructions
 		if match := regexp.MustCompile(`(?i)\bFROM\s+(?:--platform=[^\s]+\s+)?([^\s:@]+(?::[^\s@]+)?(?:@sha256:[a-fA-F0-9]{64})?)(?:\s+AS\s+([a-zA-Z0-9][a-zA-Z0-9_.-]*))?`).FindStringSubmatch(line); match != nil {
@@ -142,11 +145,10 @@ func extractImagesFromDockerfile(filePath types.FilePath, envFiles map[string]ma
 		}
 	}
 
-	if len(imageNames) > 0 {
-		lastImage := imageNames[len(imageNames)-1]
-		if len(lastImage.ImageLocations) > 0 {
-			lastImage.ImageLocations[len(lastImage.ImageLocations)-1].FinalStage = true
-		}
+	finalStageLines := stages.finalStageLines()
+	for i := range imageNames {
+		location := &imageNames[i].ImageLocations[0]
+		location.FinalStage = finalStageLines[location.Line]
 	}
 
 	if err = scanner.Err(); err != nil {
