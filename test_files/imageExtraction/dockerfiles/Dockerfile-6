@@ -1,0 +1,13 @@
+FROM golang:1.22 AS base
+WORKDIR /src
+COPY . .
+RUN go build -o /out/app ./cmd/app
+
+FROM gcr.io/distroless/static:nonroot AS prod
+COPY --from=base /out/app /app
+ENTRYPOINT ["/app"]
+
+FROM golangci/golangci-lint:v1.59 AS test
+WORKDIR /src
+COPY . .
+RUN golangci-lint run ./...

@@ -62,12 +62,12 @@ func TestExtractImagesFromDockerfiles(t *testing.T) {
 	}
 
 	expectedImages := map[string]types.ImageLocation{
-		"mcr.microsoft.com/dotnet/sdk:6.0":    {Origin: types.DockerFileOrigin, Path: "Dockerfile", FinalStage: false},
+		"mcr.microsoft.com/dotnet/sdk:6.0":    {Origin: types.DockerFileOrigin, Path: "Dockerfile", FinalStage: true},
 		"mcr.microsoft.com/dotnet/aspnet:6.0": {Origin: types.DockerFileOrigin, Path: "Dockerfile", FinalStage: true},
-		"nginx:latest":                        {Origin: types.DockerFileOrigin, Path: "Dockerfile-2", FinalStage: false},
+		"nginx:latest":                        {Origin: types.DockerFileOrigin, Path: "Dockerfile-2", FinalStage: true},
 		"mcr.microsoft.com/dotnet/aspnet:4.0": {Origin: types.DockerFileOrigin, Path: "Dockerfile-2", FinalStage: true},
-		"tonistiigi/xx:1.2.1":                 {Origin: types.DockerFileOrigin, Path: "Dockerfile-3", FinalStage: false},
-		"golang:1.20.8-alpine3.18":            {Origin: types.DockerFileOrigin, Path: "Dockerfile-3", FinalStage: false},
+		"tonistiigi/xx:1.2.1":                 {Origin: types.DockerFileOrigin, Path: "Dockerfile-3", FinalStage: true},
+		"golang:1.20.8-alpine3.18":            {Origin: types.DockerFileOrigin, Path: "Dockerfile-3", FinalStage: true},
 		"alpine:3.18":                         {Origin: types.DockerFileOrigin, Path: "Dockerfile-3", FinalStage: true},
 		"test:ubi9":                           {Origin: types.DockerFileOrigin, Path: "Dockerfile.ubi9", FinalStage: true},
 	}
@@ -120,7 +120,7 @@ func TestExtractImagesFromDockerfiles_OneValidOneInvalid(t *testing.T) {
 	}
 
 	expectedImages := map[string]types.ImageLocation{
-		"mcr.microsoft.com/dotnet/sdk:6.0":    {Origin: types.DockerFileOrigin, Path: "Dockerfile", FinalStage: false},
+		"mcr.microsoft.com/dotnet/sdk:6.0":    {Origin: types.DockerFileOrigin, Path: "Dockerfile", FinalStage: true},
 		"mcr.microsoft.com/dotnet/aspnet:6.0": {Origin: types.DockerFileOrigin, Path: "Dockerfile", FinalStage: true},
 	}
 
@@ -172,6 +172,25 @@ func TestExtractImagesFromDockerfiles_WithMultipleEnvFiles(t *testing.T) {
 
 	expectedImages := map[string]types.ImageLocation{
 		"alpine:3.18": {Origin: types.DockerFileOrigin, Path: "Dockerfile-5", FinalStage: true},
+	}
+
+	checkResult(t, images, expectedImages)
+}
+
+func TestExtractImagesFromDockerfiles_TargetStageIsNotLast(t *testing.T) {
+	filePaths := []types.FilePath{
+		{FullPath: "../../test_files/imageExtraction/dockerfiles/Dockerfile-6", RelativePath: "Dockerfile-6"},
+	}
+
+	images, err := ExtractImagesFromDockerfiles(filePaths, map[string]map[string]string{})
+	if err != nil {
+		t.Errorf("Error extracting images: %v", err)
+	}
+
+	expectedImages := map[string]types.ImageLocation{
+		"golang:1.22":                      {Origin: types.DockerFileOrigin, Path: "Dockerfile-6", FinalStage: false},
+		"gcr.io/distroless/static:nonroot": {Origin: types.DockerFileOrigin, Path: "Dockerfile-6", FinalStage: true},
+		"golangci/golangci-lint:v1.59":     {Origin: types.DockerFileOrigin, Path: "Dockerfile-6", FinalStage: true},
 	}
 
 	checkResult(t, images, expectedImages)
